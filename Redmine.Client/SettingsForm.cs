@@ -26,19 +26,25 @@ namespace Redmine.Client
         };
 
         /* api version lower then 1.1 does not support time-entry, so is not supported. */
+        public class PlainIdAndName
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
 
-        private List<IdentifiableName> apiVersions = new List<IdentifiableName> {
+        private readonly List<PlainIdAndName> apiVersions = new List<PlainIdAndName> {
             /*new IdentifiableName { Id = (int)ApiVersion.V10x, Name = LangTools.GetTextForApiVersion(ApiVersion.V10x) },*/
-            new IdentifiableName { Id = (int)ApiVersion.V11x, Name = LangTools.GetTextForApiVersion(ApiVersion.V11x) },
-            new IdentifiableName { Id = (int)ApiVersion.V12x, Name = LangTools.GetTextForApiVersion(ApiVersion.V12x) },
-            new IdentifiableName { Id = (int)ApiVersion.V13x, Name = LangTools.GetTextForApiVersion(ApiVersion.V13x) },
-            new IdentifiableName { Id = (int)ApiVersion.V14x, Name = LangTools.GetTextForApiVersion(ApiVersion.V14x) },
-            new IdentifiableName { Id = (int)ApiVersion.V20x, Name = LangTools.GetTextForApiVersion(ApiVersion.V20x) },
-            new IdentifiableName { Id = (int)ApiVersion.V21x, Name = LangTools.GetTextForApiVersion(ApiVersion.V21x) },
-            new IdentifiableName { Id = (int)ApiVersion.V22x, Name = LangTools.GetTextForApiVersion(ApiVersion.V22x) },
-            new IdentifiableName { Id = (int)ApiVersion.V23x, Name = LangTools.GetTextForApiVersion(ApiVersion.V23x) },
-            new IdentifiableName { Id = (int)ApiVersion.V24x, Name = LangTools.GetTextForApiVersion(ApiVersion.V24x) },
-            new IdentifiableName { Id = (int)ApiVersion.V25x, Name = LangTools.GetTextForApiVersion(ApiVersion.V25x) }
+            new PlainIdAndName { Id = (int)ApiVersion.V11x, Name = LangTools.GetTextForApiVersion(ApiVersion.V11x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V12x, Name = LangTools.GetTextForApiVersion(ApiVersion.V12x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V13x, Name = LangTools.GetTextForApiVersion(ApiVersion.V13x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V14x, Name = LangTools.GetTextForApiVersion(ApiVersion.V14x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V20x, Name = LangTools.GetTextForApiVersion(ApiVersion.V20x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V21x, Name = LangTools.GetTextForApiVersion(ApiVersion.V21x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V22x, Name = LangTools.GetTextForApiVersion(ApiVersion.V22x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V23x, Name = LangTools.GetTextForApiVersion(ApiVersion.V23x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V24x, Name = LangTools.GetTextForApiVersion(ApiVersion.V24x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V25x, Name = LangTools.GetTextForApiVersion(ApiVersion.V25x) },
+            new PlainIdAndName { Id = (int)ApiVersion.V41x, Name = LangTools.GetTextForApiVersion(ApiVersion.V41x) }
         };
 
         public SettingsForm()

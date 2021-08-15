@@ -6,30 +6,6 @@ using Redmine.Net.Api;
 
 namespace Redmine.Client
 {
-    public class ClientProject : Project
-    {
-        public ClientProject(Project p) {
-            this.Id = p.Id;
-            this.Name = p.Name;
-            this.Identifier = p.Identifier;
-            this.Description = p.Description;
-            this.Parent = p.Parent;
-            this.HomePage = p.HomePage;
-            this.CreatedOn = p.CreatedOn;
-            this.UpdatedOn = p.UpdatedOn;
-            this.Trackers = p.Trackers;
-            this.CustomFields = p.CustomFields;
-        }
-
-        public string DisplayName {
-            get {
-                if (Parent != null)
-                    return Parent.Name + " - " + Name;
-                return Name;
-            }
-        }
-    }
-
     public enum ApiVersion
     {
         V10x,
@@ -43,6 +19,7 @@ namespace Redmine.Client
         V23x,
         V24x,
         V25x,
+        V41x
     }
 
     public class Filter : ICloneable

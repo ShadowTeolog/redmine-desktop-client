@@ -42,7 +42,7 @@ namespace Redmine.Client
             {
                 if (type == DialogType.Edit)
                 {
-                    byte[] file = File.ReadAllBytes(textBoxAttachmentFilePath.Text);
+                    byte[] file = System.IO.File.ReadAllBytes(textBoxAttachmentFilePath.Text);
                     Upload uploadedFile = RedmineClientForm.redmine.UploadFile(file);
                     uploadedFile.FileName = Path.GetFileName(textBoxAttachmentFilePath.Text);
                     uploadedFile.Description = textBoxDescription.Text;

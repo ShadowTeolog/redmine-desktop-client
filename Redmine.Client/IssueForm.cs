@@ -19,20 +19,25 @@ namespace Redmine.Client
             public String Value { get; set; }
         };
 
-        private class ClientIssueRelation : IssueRelation
+        private class ClientIssueRelation 
         {
+            private readonly IssueRelation relation;
             private Issue issueTo;
-            public String IssueToSubject { get { return issueTo.Subject; } }
-            public IdentifiableName IssueToTracker { get { return issueTo.Tracker; } }
-            public IdentifiableName IssueToStatus { get { return issueTo.Status; } }
-            public IdentifiableName IssueToProject { get { return issueTo.Project; } }
+            public String IssueToSubject => issueTo.Subject;
+            public IdentifiableName IssueToTracker => issueTo.Tracker;
+            public IdentifiableName IssueToStatus => issueTo.Status;
+            public IdentifiableName IssueToProject => issueTo.Project;
+
+
+            public int Id => relation.Id;
+            public int IssueId => relation.IssueId;
+            public int IssueToId => relation.IssueToId;
+            public IssueRelationType Type => relation.Type;
 
             public ClientIssueRelation(IssueRelation relation, Issue issueTo)
             {
-                this.Id = relation.Id;
-                this.IssueId = relation.IssueId;
-                this.IssueToId = relation.IssueToId;
-                this.Type = relation.Type;
+                
+                this.relation = relation;
                 this.issueTo = issueTo;
             }
 
@@ -40,14 +45,14 @@ namespace Redmine.Client
             {
                 switch (issueRelationType)
                 {
-                    case IssueRelationType.precedes: return IssueRelationType.follows;
-                    case IssueRelationType.follows: return IssueRelationType.precedes;
-                    case IssueRelationType.duplicated: return IssueRelationType.duplicates;
-                    case IssueRelationType.duplicates: return IssueRelationType.duplicated;
-                    case IssueRelationType.blocks: return IssueRelationType.blocked;
-                    case IssueRelationType.blocked: return IssueRelationType.blocks;
+                    case IssueRelationType.Precedes: return IssueRelationType.Follows;
+                    case IssueRelationType.Follows: return IssueRelationType.Precedes;
+                    case IssueRelationType.Duplicated: return IssueRelationType.Duplicates;
+                    case IssueRelationType.Duplicates: return IssueRelationType.Duplicated;
+                    case IssueRelationType.Blocks: return IssueRelationType.Blocked;
+                    case IssueRelationType.Blocked: return IssueRelationType.Blocks;
                     default:
-                    case IssueRelationType.relates:
+                    case IssueRelationType.Relates:
                         return issueRelationType;
                 }
             }

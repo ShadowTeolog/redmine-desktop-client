@@ -79,6 +79,7 @@
     <Compile Include="AttachmentForm.Designer.cs">
       <DependentUpon>AttachmentForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ClientProject.cs" />
     <Compile Include="OpenSpecificIssueForm.cs">
       <SubType>Form</SubType>
     </Compile>
