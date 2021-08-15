@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Redmine.Client", "Redmine.Client\Redmine.Client.csproj", "{07ABD877-B270-4054-B10E-7AA4DEBD37E0}"
 EndProject
@@ -11,8 +11,6 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Setup", "Setup\Setup.wixpro
 	EndProjectSection
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Installer", "Installer\Installer.wixproj", "{DE8A1716-DEA3-4CEA-83E5-D24D94519B45}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "redmine-net451-api", "Redmine.Api\redmine-net451-api\redmine-net451-api.csproj", "{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,21 +54,12 @@ Global
 		{DE8A1716-DEA3-4CEA-83E5-D24D94519B45}.Release|Mixed Platforms.Build.0 = Release|x86
 		{DE8A1716-DEA3-4CEA-83E5-D24D94519B45}.Release|x86.ActiveCfg = Release|x86
 		{DE8A1716-DEA3-4CEA-83E5-D24D94519B45}.Release|x86.Build.0 = Release|x86
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Debug|x86.Build.0 = Debug|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Release|x86.ActiveCfg = Release|Any CPU
-		{4AB94C09-8CFB-41C6-87D1-6B972E7F9307}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B29057BD-2CCB-4281-95F0-5BF31C57B26A}
 	EndGlobalSection
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
