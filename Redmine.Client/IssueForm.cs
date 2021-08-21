@@ -91,7 +91,7 @@ namespace Redmine.Client
             LangTools.UpdateControlsForLanguage(contextMenuStripAttachments.Items);
 
             // initialize new objects
-            Issue issue = new Issue();
+            var issue = new Issue();
             issue.Attachments = new List<Attachment>();
         }
 
@@ -156,7 +156,7 @@ namespace Redmine.Client
 
         private void BtnSaveButton_Click(object sender, EventArgs e)
         {
-            Issue newIssue = (Issue)issue.Clone();
+            var newIssue = (Issue)issue.Clone();
             if (type == DialogType.Edit)
                 newIssue.Id = this.issue.Id;
             // first check subject as it is mandatory
@@ -176,7 +176,7 @@ namespace Redmine.Client
             try {
                 if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
                 {
-                    ProjectMember selectedMember = (ProjectMember)ComboBoxAssignedTo.SelectedItem;
+                    var selectedMember = (ProjectMember)ComboBoxAssignedTo.SelectedItem;
                     if (selectedMember.Id != 0)
                         newIssue.AssignedTo = new IdentifiableName { Id = selectedMember.Id, Name = selectedMember.Name };
                     else
@@ -199,7 +199,7 @@ namespace Redmine.Client
                 newIssue.EstimatedHours = null;
 
             // set done ratio
-            int doneRatio = Convert.ToInt32(numericUpDown1.Value);
+            var doneRatio = Convert.ToInt32(numericUpDown1.Value);
             if (doneRatio >= 0)
                 newIssue.DoneRatio = doneRatio;
             else
@@ -226,7 +226,7 @@ namespace Redmine.Client
             // set status
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
-                IssueStatus status = (IssueStatus)ComboBoxStatus.SelectedItem;
+                var status = (IssueStatus)ComboBoxStatus.SelectedItem;
                 newIssue.Status = new IdentifiableName { Id = status.Id, Name = status.Name };
             }
             else
@@ -235,7 +235,7 @@ namespace Redmine.Client
             // set version
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
-                Redmine.Net.Api.Types.Version version = (Redmine.Net.Api.Types.Version)ComboBoxTargetVersion.SelectedItem;
+                var version = (Redmine.Net.Api.Types.Version)ComboBoxTargetVersion.SelectedItem;
                 if (version.Id != 0)
                     newIssue.FixedVersion = new IdentifiableName { Id = version.Id, Name = version.Name };
                 else
@@ -278,7 +278,7 @@ namespace Redmine.Client
                         foreach (var a in issue.Attachments)
                         {
                             byte[] file = File.ReadAllBytes(a.ContentUrl);
-                            Upload uploadedFile = RedmineClientForm.redmine.UploadFile(file);
+                            var uploadedFile = RedmineClientForm.redmine.UploadFile(file);
                             uploadedFile.FileName = a.FileName;
                             uploadedFile.Description = a.Description;
                             uploadedFile.ContentType = a.ContentType;
@@ -290,7 +290,7 @@ namespace Redmine.Client
                 else
                 {
                     // ask for additional note...
-                    UpdateIssueNoteForm dlg = new UpdateIssueNoteForm(issue, newIssue);
+                    var dlg = new UpdateIssueNoteForm(issue, newIssue);
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
                         if (!String.IsNullOrEmpty(dlg.Note))
@@ -423,7 +423,7 @@ namespace Redmine.Client
             ComboBoxPriority.DataSource = Enumerations.IssuePriorities;
             ComboBoxPriority.DisplayMember = "Name";
             ComboBoxPriority.ValueMember = "Id";
-            foreach (Enumerations.EnumerationItem i in Enumerations.IssuePriorities)
+            foreach (var i in Enumerations.IssuePriorities)
             {
                 if (i.IsDefault)
                 {
@@ -512,14 +512,14 @@ namespace Redmine.Client
 
                 if (issue.CustomFields != null && issue.CustomFields.Count != 0)
                 {
-                    List<ClientCustomField> customFields = new List<ClientCustomField>();
-                    foreach (IssueCustomField cf in issue.CustomFields)
+                    var customFields = new List<ClientCustomField>();
+                    foreach (var cf in issue.CustomFields)
                     {
-                        ClientCustomField field = new ClientCustomField();
+                        var field = new ClientCustomField();
                         field.Name = cf.Name;
                         if (cf.Values != null && cf.Values.Count != 0)
                         {
-                            foreach (CustomFieldValue cfv in cf.Values)
+                            foreach (var cfv in cf.Values)
                             {
                                 if (field.Value == null)
                                     field.Value = cfv.Info;
@@ -612,7 +612,7 @@ namespace Redmine.Client
                 {
                     LabelParent = new Label();
                     LabelParent.AutoSize = true;
-                    System.Drawing.Font defaultFont = (System.Drawing.Font)labelDescription.Font.Clone();
+                    var defaultFont = (System.Drawing.Font)labelDescription.Font.Clone();
                     LabelParent.Font = new System.Drawing.Font(defaultFont.FontFamily, defaultFont.Size, System.Drawing.FontStyle.Italic, defaultFont.Unit, defaultFont.GdiCharSet);
                     LabelParent.Location = new System.Drawing.Point(TextBoxDescription.Location.X, linkEditInRedmine.Location.Y);
                     LabelParent.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
@@ -743,16 +743,16 @@ namespace Redmine.Client
                 {
                     try
                     {
-                        IssueFormData dataCache = new IssueFormData();
-                        List<ClientIssueRelation> currentIssueRelations = new List<ClientIssueRelation>();
+                        var dataCache = new IssueFormData();
+                        var currentIssueRelations = new List<ClientIssueRelation>();
                         Issue currentIssue = null;
                         if (type == DialogType.Edit)
                         {
-                            NameValueCollection issueParameters = new NameValueCollection { { "include", "journals,relations,children,attachments" } };
+                            var issueParameters = new NameValueCollection { { "include", "journals,relations,children,attachments" } };
                             currentIssue = RedmineClientForm.redmine.GetObject<Issue>(issueId.ToString(), issueParameters);
                             if (currentIssue.ParentIssue != null && currentIssue.ParentIssue.Id != 0)
                             {
-                                Issue parentIssue = RedmineClientForm.redmine.GetObject<Issue>(currentIssue.ParentIssue.Id.ToString(CultureInfo.InvariantCulture), null);
+                                var parentIssue = RedmineClientForm.redmine.GetObject<Issue>(currentIssue.ParentIssue.Id.ToString(CultureInfo.InvariantCulture), null);
                                 currentIssue.ParentIssue.Name = parentIssue.Subject;
                             }
                             this.projectId = projectId = currentIssue.Project;
@@ -760,25 +760,29 @@ namespace Redmine.Client
                         else
                         {
                             // initialize new objects
-                            currentIssue = new Issue();
-                            currentIssue.Id = 0;
-                            currentIssue.Subject = Lang.NewIssue;
-                            currentIssue.Attachments = new List<Attachment>();
+                            currentIssue = new Issue
+                            {
+                                Subject = Lang.NewIssue,
+                                Attachments = new List<Attachment>()
+                            };
                         }
                         if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
                         {
-                            NameValueCollection parameters = new NameValueCollection { { "project_id", projectId.Id.ToString() } };
-                            NameValueCollection projectParameters = new NameValueCollection { { "include", "trackers" } };
-                            Project project = RedmineClientForm.redmine.GetObject<Project>(projectId.Id.ToString(), projectParameters);
+                            var parameters = new NameValueCollection { { "project_id", projectId.Id.ToString() } };
+                            var projectParameters = new NameValueCollection { { "include", "trackers" } };
+
+                            var project = RedmineClientForm.redmine.GetObject<Project>(projectId.Id.ToString(), projectParameters);
                             dataCache.Trackers = project.Trackers;
+
                             dataCache.Categories = new List<IssueCategory>(RedmineClientForm.redmine.GetObjects<IssueCategory>(parameters));
                             dataCache.Categories.Insert(0, new IssueCategory { Id = 0, Name = "" });
+
                             dataCache.Statuses = RedmineClientForm.redmine.GetObjects<IssueStatus>(parameters);
                             dataCache.Versions = (List<Redmine.Net.Api.Types.Version>)RedmineClientForm.redmine.GetObjects<Redmine.Net.Api.Types.Version>(parameters);
                             dataCache.Versions.Insert(0, new Redmine.Net.Api.Types.Version { Id = 0, Name = "" });
                             if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
                             {
-                                List<ProjectMembership> projectMembers = (List<ProjectMembership>)RedmineClientForm.redmine.GetObjects<ProjectMembership>(parameters);
+                                var projectMembers = (List<ProjectMembership>)RedmineClientForm.redmine.GetObjects<ProjectMembership>(parameters);
                                 //RedmineClientForm.DataCache.Watchers = projectMembers.ConvertAll(new Converter<ProjectMembership, Assignee>(MemberToAssignee));
                                 dataCache.ProjectMembers = projectMembers.ConvertAll(new Converter<ProjectMembership, ProjectMember>(ProjectMember.MembershipToMember));
                                 dataCache.ProjectMembers.Insert(0, new ProjectMember(new ProjectMembership { Id = 0, User = new IdentifiableName { Id = 0, Name = "" } }));
@@ -799,7 +803,7 @@ namespace Redmine.Client
                                         r.IssueId = issueId;
                                         r.Type = ClientIssueRelation.InvertRelationType(r.Type);
                                     }
-                                    Issue relatedIssue = RedmineClientForm.redmine.GetObject<Issue>(r.IssueToId.ToString(), null);
+                                    var relatedIssue = RedmineClientForm.redmine.GetObject<Issue>(r.IssueToId.ToString(), null);
                                     currentIssueRelations.Add(new ClientIssueRelation(r, relatedIssue));
                                 }
                             }
@@ -863,7 +867,7 @@ namespace Redmine.Client
         {
             try
             {
-                TimeEntriesForm dlg = new TimeEntriesForm(issue, DataCache.ProjectMembers);
+                var dlg = new TimeEntriesForm(issue, DataCache.ProjectMembers);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     //BtnRefreshButton_Click(null, null);
@@ -879,14 +883,14 @@ namespace Redmine.Client
         {
             if (e.ColumnIndex == DataGridViewChildren.Columns["Id"].Index) // Id column
             {
-                IssueChild currentIssueChild = (IssueChild)DataGridViewChildren.Rows[e.RowIndex].DataBoundItem;
+                var currentIssueChild = (IssueChild)DataGridViewChildren.Rows[e.RowIndex].DataBoundItem;
                 e.Value = currentIssueChild.Tracker.Name + " " + currentIssueChild.Id.ToString();
             }
         }
 
         private void DataGridViewChildren_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            IssueChild currentIssueChild = (IssueChild)DataGridViewChildren.Rows[e.RowIndex].DataBoundItem;
+            var currentIssueChild = (IssueChild)DataGridViewChildren.Rows[e.RowIndex].DataBoundItem;
             RedmineClientForm.ShowIssue(new Issue { Id = currentIssueChild.Id, Subject = currentIssueChild.Subject });
         }
 
@@ -894,19 +898,19 @@ namespace Redmine.Client
         {
             if (e.ColumnIndex == DataGridViewRelations.Columns["Id"].Index) // Id column
             {
-                ClientIssueRelation currentIssueRelation = (ClientIssueRelation)DataGridViewRelations.Rows[e.RowIndex].DataBoundItem;
+                var currentIssueRelation = (ClientIssueRelation)DataGridViewRelations.Rows[e.RowIndex].DataBoundItem;
                 e.Value = currentIssueRelation.IssueToTracker.Name + " " + currentIssueRelation.IssueToId.ToString();
             }
             if (e.ColumnIndex == DataGridViewRelations.Columns["IssueToStatus"].Index) // Id column
             {
-                ClientIssueRelation currentIssueRelation = (ClientIssueRelation)DataGridViewRelations.Rows[e.RowIndex].DataBoundItem;
+                var currentIssueRelation = (ClientIssueRelation)DataGridViewRelations.Rows[e.RowIndex].DataBoundItem;
                 e.Value = currentIssueRelation.IssueToStatus.Name;
             }
         }
 
         private void DataGridViewRelations_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            ClientIssueRelation currentIssueRelation = (ClientIssueRelation)DataGridViewRelations.Rows[e.RowIndex].DataBoundItem;
+            var currentIssueRelation = (ClientIssueRelation)DataGridViewRelations.Rows[e.RowIndex].DataBoundItem;
             RedmineClientForm.ShowIssue(new Issue { Id = currentIssueRelation.IssueToId, Subject = currentIssueRelation.IssueToSubject, Project = currentIssueRelation.IssueToProject } );
         }
 
@@ -914,7 +918,7 @@ namespace Redmine.Client
         {
             if (type == DialogType.New)
                 return;
-            Attachment attachment = (Attachment)dataGridViewAttachments.Rows[e.RowIndex].DataBoundItem;
+            var attachment = (Attachment)dataGridViewAttachments.Rows[e.RowIndex].DataBoundItem;
             System.Diagnostics.Process.Start(attachment.ContentUrl);
         }
 
@@ -922,12 +926,12 @@ namespace Redmine.Client
         {
             if (e.ColumnIndex == dataGridViewAttachments.Columns["FileName"].Index) // Filename
             {
-                Attachment attachment = (Attachment)dataGridViewAttachments.Rows[e.RowIndex].DataBoundItem;
+                var attachment = (Attachment)dataGridViewAttachments.Rows[e.RowIndex].DataBoundItem;
                 e.Value = attachment.FileName + " (" + attachment.FileSize.ToByteString() + ")";
             }
             if (e.ColumnIndex == dataGridViewAttachments.Columns["Author"].Index) // Author
             {
-                Attachment attachment = (Attachment)dataGridViewAttachments.Rows[e.RowIndex].DataBoundItem;
+                var attachment = (Attachment)dataGridViewAttachments.Rows[e.RowIndex].DataBoundItem;
                 e.Value = attachment.Author.Name;
             }
         }
@@ -960,10 +964,10 @@ namespace Redmine.Client
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                bool addedAttachment = false;
+                var addedAttachment = false;
                 foreach (var file in files)
                 {
-                    AttachmentForm dlg = new AttachmentForm(issue, type, file);
+                    var dlg = new AttachmentForm(issue, type, file);
                     if (dlg.ShowDialog(this) == DialogResult.Cancel)
                         break;
                     else
@@ -1000,7 +1004,7 @@ namespace Redmine.Client
             if (dataGridViewAttachments.SelectedRows.Count <= 0)
                 return;
 
-            Attachment attachment = (Attachment)dataGridViewAttachments.SelectedRows[0].DataBoundItem;
+            var attachment = (Attachment)dataGridViewAttachments.SelectedRows[0].DataBoundItem;
             System.Diagnostics.Process.Start(attachment.ContentUrl);
         }
 
@@ -1014,7 +1018,7 @@ namespace Redmine.Client
             if (dataGridViewAttachments.SelectedRows.Count <= 0)
                 return;
 
-            Attachment attachment = (Attachment)dataGridViewAttachments.SelectedRows[0].DataBoundItem;
+            var attachment = (Attachment)dataGridViewAttachments.SelectedRows[0].DataBoundItem;
             issue.Attachments.Remove(attachment);
             AttachAttachements(issue.Attachments);
         }

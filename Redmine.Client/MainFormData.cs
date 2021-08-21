@@ -53,7 +53,7 @@ namespace Redmine.Client
 
     internal class MainFormData
     {
-        public List<IClientProject> Projects { get;}
+        public List<IClientProject> Projects { get; } = new List<IClientProject>();
         public IList<Issue> Issues { get; set; }
         public IList<CustomField> CustomFields { get; }
 
@@ -71,12 +71,9 @@ namespace Redmine.Client
         public MainFormData(IList<Project> projects, int projectId, bool onlyMe, Filter filter)
         {
             ProjectId = projectId;
-            Projects = new List<IClientProject>();
             Projects.Add(new FakeClientProject(FakeClientProject.FakeProjectId.AllIssues, Languages.Lang.ShowAllIssues));
-            foreach(var p in projects)
-            {
-                Projects.Add(new ClientProject(p));
-            }
+            Projects.AddRange(projects.Select(i=> new ClientProject(i)));
+
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
                 if (projectId < 0) //fake project 
@@ -189,7 +186,7 @@ namespace Redmine.Client
 
             try
             {
-                NameValueCollection parameters = InitParameters();
+                var parameters = InitParameters();
                 if (onlyMe)
                     parameters.Add(RedmineKeys.ASSIGNED_TO_ID, "me");
                 else if (filter.AssignedToId > 0)
@@ -256,10 +253,6 @@ namespace Redmine.Client
             return parameters;
         }
 
-        private static ProjectTracker TrackerToProjectTracker(Tracker tracker)
-        {
-            return new ProjectTracker { Id = tracker.Id, Name = tracker.Name };
-        }
 
         private static ProjectMember UserToProjectMember(User user)
         {
