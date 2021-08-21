@@ -253,9 +253,9 @@ namespace Redmine.Client
             // set category
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
-                IssueCategory category = (IssueCategory)ComboBoxCategory.SelectedItem;
+                var category = (IIssueCategory)ComboBoxCategory.SelectedItem;
                 if (category.Id != 0)
-                    newIssue.Category = new IdentifiableName { Id = category.Id, Name = category.Name };
+                    newIssue.Category = StrangeCallHelper.CreateIdentifiableName(category.Id, Name = category.Name);
                 else
                     newIssue.Category = null;
             }
@@ -485,6 +485,7 @@ namespace Redmine.Client
                     ComboBoxTracker.DisplayMember = "Name";
                     ComboBoxTracker.ValueMember = "Id";
                     ComboBoxTracker.SelectedItem = issue.Tracker;
+                    //why this add category to common data source???
                     if (issue.Category != null)
                     {
                         ComboBoxCategory.Items.Add(issue.Category);
@@ -933,7 +934,7 @@ namespace Redmine.Client
 
         private void BtnAddButton_Click(object sender, EventArgs e)
         {
-            AttachmentForm dlg = new AttachmentForm(issue, type, "");
+            var dlg = new AttachmentForm(issue, type, "");
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 if (type == DialogType.Edit)

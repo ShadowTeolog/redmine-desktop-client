@@ -26,26 +26,27 @@ namespace Redmine.Client
 
     public class ProjectMember : IProjectMember
     {
-        private ProjectMembership member;
+        private IdentifiableName User;
+        private IdentifiableName Group;
 
         public ProjectMember()
         {
-            this.member = new ProjectMembership { User = new IdentifiableName { Id = 0, Name = "" } };
+            User = IdentifiableName.Create<IdentifiableName>(0);
+            User.Name=string.Empty;
         }
         public ProjectMember(User user)
         {
-            this.member = new ProjectMembership { User = new IdentifiableName { Id = user.Id, Name = user.CompleteName() } };
+            User = IdentifiableName.Create<IdentifiableName>(user.Id);
+            User.Name = user.CompleteName();
         }
         public ProjectMember(ProjectMembership projectMember)
         {
-            this.member = projectMember;
+            User = projectMember.User;
+            Group = projectMember.Group;
         }
-        public int Id { get { if (member.User == null) return member.Group.Id; else return member.User.Id; } }
-        public string Name { get { if (member.User == null) return member.Group.Name; else return member.User.Name; } }
-        /// <summary>
-        /// Get the inner member of the projectmembership
-        /// </summary>
-        public ProjectMembership Member { get { return member; } }
+        public int Id => User?.Id ?? Group.Id;
+        public string Name => User?.Name ?? Group.Name;
+
 
         public static ProjectMember MembershipToMember(ProjectMembership projectMember)
         {

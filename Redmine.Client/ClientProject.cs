@@ -4,7 +4,12 @@ using Redmine.Net.Api.Types;
 
 namespace Redmine.Client
 {
-    public class ClientProject
+    public interface IClientProject
+    {
+        int Id { get; }
+        string Name { get; }
+    }
+    public class ClientProject : IClientProject
     {
         private readonly Project p;
 
@@ -29,5 +34,25 @@ namespace Redmine.Client
                 return Name;
             }
         }
+    }
+
+    public class FakeClientProject : IClientProject
+    {
+        private readonly FakeProjectId id;
+        public string Name { get; }
+        
+
+        public enum FakeProjectId
+        {
+            AllIssues=-1
+        }
+        public FakeClientProject(FakeProjectId id,string name)
+        {
+            this.id = id;
+            Name = name;
+        }
+
+        public int Id => (int)id;
+        
     }
 }

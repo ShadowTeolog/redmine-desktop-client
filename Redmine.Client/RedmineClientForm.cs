@@ -2,8 +2,6 @@
 using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Configuration;
 using System.Drawing;
 using System.Windows.Forms;
 using Redmine.Net.Api;
@@ -148,7 +146,7 @@ namespace Redmine.Client
         {
             if (clientIsRunning)
                 SaveRuntimeConfig();
-            bool bRetry = false;
+            var bRetry = false;
             do
             {
                 try
@@ -208,7 +206,7 @@ namespace Redmine.Client
 
         private MainFormData PrepareFormData(int projectId, bool onlyMe, Filter filter)
         {
-            NameValueCollection parameters = new NameValueCollection();
+            var parameters = new NameValueCollection();
             IList<Project> allProjects = redmine.GetObjects<Project>(parameters);
             IList<Project> projects;
             if (Settings.Default.OnlyMyProjects)
@@ -227,10 +225,10 @@ namespace Redmine.Client
 
         private IList<Project> OnlyProjectsForMember(User member, IList<Project> projects)
         {
-            List<Project> memberProjects = new List<Project>();
-            foreach (Project p in projects)
+            var memberProjects = new List<Project>();
+            foreach (var p in projects)
             {
-                foreach (Membership m in member.Memberships)
+                foreach (var m in member.Memberships)
                 {
                     if (p.Id == m.Project.Id)
                     {
@@ -274,7 +272,7 @@ namespace Redmine.Client
             ComboBoxProject.ValueMember = "Id";
             ComboBoxProject.DisplayMember = "DisplayName";
 
-            int currentActivityId = activityId;
+            var currentActivityId = activityId;
             ComboBoxActivity.DataSource = Enumerations.Activities;
             ComboBoxActivity.DisplayMember = "Name";
             ComboBoxActivity.ValueMember = "Id";
@@ -384,12 +382,12 @@ namespace Redmine.Client
         {
             if (currentIssues == null)
                 return; // No issues yet
-            String[] keywords = textBoxSearch.Text.ToLower().Split(' ');
+            var keywords = textBoxSearch.Text.ToLower().Split(' ');
             IList<Issue> filteredIssues = new List<Issue>();
-            foreach (Issue i in currentIssues)
+            foreach (var i in currentIssues)
             {
-                bool found = true;
-                foreach (String keyword in keywords)
+                var found = true;
+                foreach (var keyword in keywords)
                 {
                     if (!IssueHasKeyword(i, keyword))
                     {
@@ -423,7 +421,7 @@ namespace Redmine.Client
             if (currentSortedColumn == null)
             {
                 currentSortedColumn = DataGridViewIssues.Columns[Settings.Default.IssueGridSortColumn];
-                SortOrder order = Settings.Default.IssueGridSortOrder;
+                var order = Settings.Default.IssueGridSortOrder;
                 InvertSort(ref order);
                 currentSortedColumn.HeaderCell.SortGlyphDirection = order;
             }
@@ -478,9 +476,9 @@ namespace Redmine.Client
             PopupInterval = Settings.Default.PopupInterval;
             RedmineVersion = (ApiVersion)Settings.Default.ApiVersion;
 
-            int sizeX = Settings.Default.MainWindowSizeX;
-            int sizeY = Settings.Default.MainWindowSizeY;
-            Size FormSize = new Size(
+            var sizeX = Settings.Default.MainWindowSizeX;
+            var sizeY = Settings.Default.MainWindowSizeY;
+            var FormSize = new Size(
                                       Settings.Default.MainWindowSizeX,
                                       Settings.Default.MainWindowSizeY);
             if (FormSize.Height > 0 && FormSize.Width > 0)
@@ -676,18 +674,18 @@ namespace Redmine.Client
         {
             if (ticking)
             {
-                string issueText = "";
-                string activityText = "";
+                var issueText = "";
+                var activityText = "";
                 if (DataGridViewIssues.SelectedRows.Count == 1)
                 {
-                    Issue selectedIssue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
+                    var selectedIssue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
                     issueText = String.Format("({0}) {1}", selectedIssue.Id, selectedIssue.Subject);
                 }
                 if (ComboBoxActivity.SelectedItem != null)
                 {
                     activityText = ((Enumerations.EnumerationItem)ComboBoxActivity.SelectedItem).Name;
                 }
-                string finalText = String.Format("{3} - {2}{0}{1}", Environment.NewLine, issueText, activityText, Lang.RedmineClientTitle_NoUser);
+                var finalText = String.Format("{3} - {2}{0}{1}", Environment.NewLine, issueText, activityText, Lang.RedmineClientTitle_NoUser);
                 if (finalText.Length>63)
                     finalText = String.Format("{0}...", finalText.Substring(0,60));
                 this.notifyIcon1.Text = finalText;
@@ -699,7 +697,7 @@ namespace Redmine.Client
         private void UpdateTime()
         {
             this.updating = true;
-            int ticks = Ticks;
+            var ticks = Ticks;
             this.TextBoxHours.Text   = (ticks / 3600)   .ToString("D2");
             this.TextBoxMinutes.Text = (ticks / 60 % 60).ToString("D2");
             this.TextBoxSeconds.Text = (ticks % 60)     .ToString("D2");
@@ -776,7 +774,7 @@ namespace Redmine.Client
         public static bool CheckNumericValue(string val, int min, int max)
         {
             int myval;
-            bool succ = Int32.TryParse(val, out myval);
+            var succ = Int32.TryParse(val, out myval);
             if (!succ || myval > max || myval < min)
             {
                 return false;
@@ -791,25 +789,26 @@ namespace Redmine.Client
         /// <param name="e"></param>
         private void BtnCommitButton_Click(object sender, EventArgs e)
         {
-            bool shouldIRestart = ticking;
+            var shouldIRestart = ticking;
 
             if (DataGridViewIssues.SelectedRows.Count == 1 && ComboBoxActivity.SelectedItem != null && Ticks != 0)
             {
-                Issue selectedIssue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
-                Enumerations.EnumerationItem selectedActivity = (Enumerations.EnumerationItem)ComboBoxActivity.SelectedItem;
+                var selectedIssue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
+                var selectedActivity = (Enumerations.EnumerationItem)ComboBoxActivity.SelectedItem;
 
                 PauzeTimer();
-                CommitForm commitDlg = new CommitForm(selectedIssue, Ticks, TextBoxComment.Text, selectedActivity.Id, dateTimePicker1.Value);
+                var commitDlg = new CommitForm(selectedIssue, Ticks, TextBoxComment.Text, selectedActivity.Id, dateTimePicker1.Value);
                 if (commitDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    TimeEntry entry = new TimeEntry();
-                    entry.Activity = new IdentifiableName { Id = commitDlg.activityId };
-                    entry.Comments = commitDlg.Comment;
-                    entry.Hours = (decimal)Ticks / 3600;
-                    entry.Issue = new IdentifiableName { Id = selectedIssue.Id };
-                    entry.Project = new IdentifiableName { Id = selectedIssue.Project.Id };
-                    entry.SpentOn = dateTimePicker1.Value;
-                    entry.User = new IdentifiableName { Id = currentUser.Id };
+                    var entry = new TimeEntry
+                    {
+                        Activity = IdentifiableName.Create<IdentifiableName>(commitDlg.activityId),
+                        Comments = commitDlg.Comment,
+                        Hours = (decimal)Ticks / 3600,
+                        Issue = IdentifiableName.Create<IdentifiableName>(selectedIssue.Id),
+                        Project = selectedIssue.Project,
+                        SpentOn = dateTimePicker1.Value,
+                    };
                     try
                     {
                         redmine.CreateObject(entry);
@@ -922,7 +921,7 @@ namespace Redmine.Client
             SetCurrentWorkName(Lang.BgWork_GetFormData);
             try
             {
-                Filter newFilter = (Filter)currentFilter.Clone();
+                var newFilter = (Filter)currentFilter.Clone();
                 FillForm(PrepareFormData(projectId, CheckBoxOnlyMe.Checked, newFilter), newFilter);
             }
             catch (LoadException le)
@@ -944,7 +943,7 @@ namespace Redmine.Client
         /// <returns>True if window was closed with OK</returns>
         private bool ShowSettingsForm()
         {
-            SettingsForm dlg = new SettingsForm();
+            var dlg = new SettingsForm();
             return dlg.ShowDialog(this) == System.Windows.Forms.DialogResult.OK;
         }
 
@@ -969,7 +968,7 @@ namespace Redmine.Client
         /// <param name="e"></param>
         private void BtnNewIssueButton_Click(object sender, EventArgs e)
         {
-            IssueForm dlg = new IssueForm(Projects[projectId]);
+            var dlg = new IssueForm(Projects[projectId]);
             dlg.Size = new Size(Settings.Default.IssueWindowSizeX,
                                 Settings.Default.IssueWindowSizeY);
             if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -983,7 +982,7 @@ namespace Redmine.Client
 
         private void BtnAboutButton_Click(object sender, EventArgs e)
         {
-            AboutBox aboutBox = new AboutBox();
+            var aboutBox = new AboutBox();
             aboutBox.ShowDialog(this);
         }
 
@@ -1004,7 +1003,7 @@ namespace Redmine.Client
             {
                 try
                 {
-                    MainFormData data = PrepareFormData(projectId, onlyMe, filter);
+                    var data = PrepareFormData(projectId, onlyMe, filter);
 
                     //Let main thread fill form data...
                     return () =>
@@ -1054,9 +1053,9 @@ namespace Redmine.Client
             {
                 try
                 {
-                    NameValueCollection parameters = new NameValueCollection();
+                    var parameters = new NameValueCollection();
                     parameters.Add("include", "memberships");
-                    User newCurrentUser = redmine.GetCurrentUser(parameters);
+                    var newCurrentUser = redmine.GetCurrentUser(parameters);
                     return () =>
                     {
                         currentUser = newCurrentUser;
@@ -1098,7 +1097,7 @@ namespace Redmine.Client
         /// </summary>
         private void UpdateTitle()
         {
-            String title = Title;
+            var title = Title;
             if (!String.IsNullOrEmpty(currentWorkName))
                 title += " - " + currentWorkName + "...";
             this.Text = title;
@@ -1123,7 +1122,7 @@ namespace Redmine.Client
         /// </summary>
         private void AsyncCheckForUpdates()
         {
-            string latestVersionUrl = Utility.CheckForUpdate();
+            var latestVersionUrl = Utility.CheckForUpdate();
             if (latestVersionUrl != String.Empty)
             {
                 if (MessageBox.Show(Lang.NewVersionText,
@@ -1150,7 +1149,7 @@ namespace Redmine.Client
                         }
                     }
                 }
-                IssueForm dlg = new IssueForm(issue);
+                var dlg = new IssueForm(issue);
                 dlg.Size = new Size(Settings.Default.IssueWindowSizeX,
                                     Settings.Default.IssueWindowSizeY);
                 dlg.Show();
@@ -1228,7 +1227,7 @@ namespace Redmine.Client
 
             try
             {
-                Issue selectedIssue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
+                var selectedIssue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
                 if (selectedIssue.Status.Id == Settings.Default.NewStatus)
                 {
                     if (UpdateIssueState(selectedIssue, Settings.Default.InProgressStatus))
@@ -1241,23 +1240,31 @@ namespace Redmine.Client
             }
         }
 
+        Issue RequestIssueSync(int Id)
+        {
+            var issue = redmine.GetObject<Issue>(Id.ToString(), new NameValueCollection
+            {
+                { RedmineKeys.INCLUDE, $"{RedmineKeys.CHILDREN},{RedmineKeys.ATTACHMENTS},{RedmineKeys.RELATIONS},{RedmineKeys.CHANGE_SETS},{RedmineKeys.JOURNALS},{RedmineKeys.WATCHERS}" }
+            });
+            return issue;
+        }
         private bool UpdateIssueState(Issue issue, int idState)
         {
-            Issue originalIssue = redmine.GetObject<Issue>(issue.Id.ToString(), null);
+            var originalIssue = redmine.GetObject<Issue>(issue.Id.ToString(), null);
             if (originalIssue.Status.Id == idState)
                 return false;
 
-            Issue newIssue = (Issue)originalIssue.Clone();
+            var newIssue = (Issue)originalIssue.Clone();
 
-            Dictionary<int, IssueStatus> statusDict = MainFormData.ToDictionaryName<IssueStatus>(redmine.GetObjects<IssueStatus>());
-            IssueStatus newStatus;
-            if (!statusDict.TryGetValue(idState, out newStatus))
+            
+            var statusDict = MainFormData.ToDictionaryName<IssueStatus>(redmine.GetObjects<IssueStatus>());
+            if (!statusDict.TryGetValue(idState, out var newStatus))
                 throw new Exception(Lang.Error_ClosedStatusUnknown);
 
-            newIssue.Status = new IdentifiableName { Id = newStatus.Id, Name = newStatus.Name };
+            newIssue.Status = StrangeCallHelper.CreateIdentifiableName(newStatus.Id, Name = newStatus.Name);
             if (Settings.Default.AddNoteOnChangeStatus)
             {
-                UpdateIssueNoteForm dlg = new UpdateIssueNoteForm(originalIssue, newIssue);
+                var dlg = new UpdateIssueNoteForm(originalIssue, newIssue);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     newIssue.Notes = dlg.Note;
@@ -1297,7 +1304,7 @@ namespace Redmine.Client
         {
             if (e.RowIndex < 0)
                 return;
-            Issue issue = (Issue)DataGridViewIssues.Rows[e.RowIndex].DataBoundItem;
+            var issue = (Issue)DataGridViewIssues.Rows[e.RowIndex].DataBoundItem;
             ShowIssue(issue);
         }
 
@@ -1340,7 +1347,7 @@ namespace Redmine.Client
         {
             if (e.RowIndex < 0)
                 return;
-            Issue currentIssue = (Issue)DataGridViewIssues.Rows[e.RowIndex].DataBoundItem;
+            var currentIssue = (Issue)DataGridViewIssues.Rows[e.RowIndex].DataBoundItem;
 
             if (e.ColumnIndex == DataGridViewIssues.Columns["Id"].Index) // Id column
                 e.Value = currentIssue.Tracker.Name + " " + currentIssue.Id.ToString();
@@ -1392,7 +1399,7 @@ namespace Redmine.Client
                 }
                 else
                 {
-                    Type type = GetPropertyType(x, column);
+                    var type = GetPropertyType(x, column);
                     if (type == typeof(IdentifiableName))
                     {
                         var valx = GetPropertyValue<IdentifiableName>(x, column);
@@ -1447,12 +1454,12 @@ namespace Redmine.Client
 
         private void DataGridViewIssues_SortByColumn(DataGridViewColumn sortColumn, SortOrder? newOrder)
         {
-            SortOrder sortOrder = sortColumn.HeaderCell.SortGlyphDirection;
+            var sortOrder = sortColumn.HeaderCell.SortGlyphDirection;
             // reset current sortcolumn after retrieving the current sortorder.
             if (currentSortedColumn != null && currentSortedColumn.DataGridView == DataGridViewIssues)
                 currentSortedColumn.HeaderCell.SortGlyphDirection = SortOrder.None;
 
-            int currentSelectedIssue = issueId;
+            var currentSelectedIssue = issueId;
             if (sortOrder == SortOrder.None)
                 sortOrder = SortOrder.Ascending;
             else
@@ -1461,7 +1468,7 @@ namespace Redmine.Client
             if (newOrder.HasValue)
                 sortOrder = newOrder.Value;
 
-            List<Issue> issueList = (List<Issue>)DataGridViewIssues.DataSource;
+            var issueList = (List<Issue>)DataGridViewIssues.DataSource;
             issueList.Sort(new CompareIssue(sortColumn.Name, sortOrder));
             sortColumn.HeaderCell.SortGlyphDirection = sortOrder;
             currentSortedColumn = sortColumn;
@@ -1496,7 +1503,7 @@ namespace Redmine.Client
 
         private void editVisibleColumnsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            IssueGridSelectColumns dlg = new IssueGridSelectColumns();
+            var dlg = new IssueGridSelectColumns();
             if (dlg.ShowDialog(this) == DialogResult.OK)
                 UpdateIssueDataColumns();
         }
@@ -1505,7 +1512,7 @@ namespace Redmine.Client
         {
             try
             {
-                Issue issue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
+                var issue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
                 ShowIssue(issue);
             }
             catch (Exception)
@@ -1517,7 +1524,7 @@ namespace Redmine.Client
         {
             try
             {
-                Issue issue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
+                var issue = (Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem;
                 System.Diagnostics.Process.Start(RedmineClientForm.RedmineURL + "/issues/" + issue.Id.ToString());
             }
             catch (Exception)
@@ -1545,7 +1552,7 @@ namespace Redmine.Client
         {
             try
             {
-                currentFilter.TrackerId = ((ProjectTracker)ComboBoxTracker.SelectedItem).Id;
+                currentFilter.TrackerId = ((ITrackerRef)ComboBoxTracker.SelectedItem).Id;
             }
             catch (Exception)
             {
@@ -1610,7 +1617,7 @@ namespace Redmine.Client
         {
             try
             {
-                currentFilter.CategoryId = ((IssueCategory)ComboBoxCategory.SelectedItem).Id;
+                currentFilter.CategoryId = (ComboBoxCategory.SelectedItem as IIssueCategory)?.Id ?? 0;
             }
             catch (Exception)
             {
@@ -1652,12 +1659,22 @@ namespace Redmine.Client
 
         private void BtnOpenIssueButton_Click(object sender, EventArgs e)
         {
-            OpenSpecificIssueForm dlg = new OpenSpecificIssueForm();
+            var dlg = new OpenSpecificIssueForm();
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                Issue issue = new Issue { Id = dlg.IssueNumber };
-                ShowIssue(issue);
+                try
+                {
+                    var issue = RequestIssueSync(dlg.IssueNumber);
+                    ShowIssue(issue);
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message);
+                }
+                
             }
+            
+            
         }
 
 

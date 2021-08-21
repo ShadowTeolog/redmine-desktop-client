@@ -38,38 +38,38 @@ namespace Redmine.Client
 
         private void BtnOKButton_Click(object sender, EventArgs e)
         {
-            try
-            {
-                if (type == DialogType.Edit)
-                {
-                    byte[] file = System.IO.File.ReadAllBytes(textBoxAttachmentFilePath.Text);
-                    Upload uploadedFile = RedmineClientForm.redmine.UploadFile(file);
-                    uploadedFile.FileName = Path.GetFileName(textBoxAttachmentFilePath.Text);
-                    uploadedFile.Description = textBoxDescription.Text;
-                    uploadedFile.ContentType = GetMimeType(Path.GetExtension(textBoxAttachmentFilePath.Text));
-                    issue.Uploads = new List<Upload>();
-                    issue.Uploads.Add(uploadedFile);
-                    RedmineClientForm.redmine.UpdateObject<Issue>(issue.Id.ToString(), issue);
-                }
-                else
-                {
-                    NewAttachment = new Attachment
-                    {
-                        ContentUrl = textBoxAttachmentFilePath.Text,
-                        Description = textBoxDescription.Text,
-                        FileName = Path.GetFileName(textBoxAttachmentFilePath.Text),
-                        ContentType = GetMimeType(Path.GetExtension(textBoxAttachmentFilePath.Text)),
-                        FileSize = (int)new FileInfo(textBoxAttachmentFilePath.Text).Length,
-                        Author = new IdentifiableName { Id = RedmineClientForm.Instance.CurrentUser.Id, Name = RedmineClientForm.Instance.CurrentUser.CompleteName() }
-                    };
-                }
-                DialogResult = DialogResult.OK;
-                this.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(String.Format(Lang.Error_Exception, ex.Message), Lang.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            //try
+            //{
+            //    if (type == DialogType.Edit)
+            //    {
+            //        var file = System.IO.File.ReadAllBytes(textBoxAttachmentFilePath.Text);
+            //        var uploadedFile = RedmineClientForm.redmine.UploadFile(file);
+            //        uploadedFile.FileName = Path.GetFileName(textBoxAttachmentFilePath.Text);
+            //        uploadedFile.Description = textBoxDescription.Text;
+            //        uploadedFile.ContentType = GetMimeType(Path.GetExtension(textBoxAttachmentFilePath.Text));
+            //        issue.Uploads= new List<Upload>();
+            //        issue.Uploads.Add(uploadedFile);
+            //        RedmineClientForm.redmine.UpdateObject<Issue>(issue.Id.ToString(), issue);
+            //    }
+            //    else
+            //    {
+            //        NewAttachment = new Attachment
+            //        {
+            //            ContentUrl = textBoxAttachmentFilePath.Text,
+            //            FileName = Path.GetFileName(textBoxAttachmentFilePath.Text),
+            //            Description = textBoxDescription.Text,
+            //            ContentType = GetMimeType(Path.GetExtension(textBoxAttachmentFilePath.Text)),
+            //            FileSize = (int)new FileInfo(textBoxAttachmentFilePath.Text).Length,
+            //            Author = new IdentifiableName { Id = RedmineClientForm.Instance.CurrentUser.Id, Name = RedmineClientForm.Instance.CurrentUser.CompleteName() }
+            //        };
+            //    }
+            //    DialogResult = DialogResult.OK;
+            //    this.Close();
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(String.Format(Lang.Error_Exception, ex.Message), Lang.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //}
         }
 
 

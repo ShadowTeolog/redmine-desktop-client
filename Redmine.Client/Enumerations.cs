@@ -32,7 +32,9 @@ namespace Redmine.Client
 
             public IdentifiableName ToIdentifiableName()
             {
-                return new IdentifiableName() { Id = this.Id, Name = this.Name };
+                var enumeration = IdentifiableName.Create<IdentifiableName>(this.Id);
+                enumeration.Name = this.Name;
+                return enumeration;
             }
 
             #region Implementation of IXmlSerializable
@@ -112,7 +114,7 @@ namespace Redmine.Client
 
         public static void LoadIssuePriorities()
         {
-            bool loadDefault = false;
+            var loadDefault = false;
             try
             {
                 IssuePriorities = Load("IssuePriorities");
@@ -132,7 +134,7 @@ namespace Redmine.Client
 
         public static void LoadActivities()
         {
-            bool loadDefault = false;
+            var loadDefault = false;
             try
             {
                 Activities = Load("Activities");
@@ -149,16 +151,13 @@ namespace Redmine.Client
 
         public static List<EnumerationItem> Load(string listName)
         {
-            string fileName = Application.CommonAppDataPath + "\\" + listName + ".xml";
-            FileStream f = File.OpenRead(fileName);
-            List<EnumerationItem> list = new List<EnumerationItem>();
-            using (var xmlReader = new XmlTextReader(f))
+            var fileName = Path.Combine(Application.CommonAppDataPath,listName + ".xml");
+            using (var xmlReader = new XmlTextReader(fileName))
             {
                 xmlReader.WhitespaceHandling = WhitespaceHandling.None;
                 xmlReader.Read();
-                list = xmlReader.ReadElementContentAsCollection<EnumerationItem>();
+                return xmlReader.ReadElementContentAsCollection<EnumerationItem>();
             }
-            return list;
         }
 
         public static void SaveAll()
@@ -180,28 +179,25 @@ namespace Redmine.Client
         public static void Save(IList<EnumerationItem> list, string listName)
         {
             var xws = new XmlWriterSettings { OmitXmlDeclaration = true };
-            string fileName = Application.CommonAppDataPath + "\\" + listName + ".xml";
-
-            File.Delete(fileName);
-            FileStream f = File.OpenWrite(fileName);
-            using (var xmlWriter = XmlWriter.Create(f, xws))
+            var fileName = Path.Combine(Application.CommonAppDataPath,listName + ".xml");
+            System.IO.File.Delete(fileName);
+            using (var xmlWriter = XmlWriter.Create(fileName, xws))
             {
                 xmlWriter.WriteCollectionAsElement(list, listName);
             }
-            f.Close();
         }
 
         public static void UpdateActivities(IList<TimeEntryActivity> timeEntryActivities)
         {
             Activities.Clear();
-            foreach (TimeEntryActivity ta in timeEntryActivities)
+            foreach (var ta in timeEntryActivities)
                 Activities.Add(new EnumerationItem { Id = ta.Id, Name = ta.Name, IsDefault = ta.IsDefault } );
         }
 
         public static void UpdateIssuePriorities(IList<IssuePriority> issuePriorities)
         {
             IssuePriorities.Clear();
-            foreach (IssuePriority ip in issuePriorities)
+            foreach (var ip in issuePriorities)
                 IssuePriorities.Add(new EnumerationItem { Id = ip.Id, Name = ip.Name, IsDefault = ip.IsDefault });
         }
 

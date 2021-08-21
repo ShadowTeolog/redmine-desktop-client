@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Redmine.Net.Api.Types;
 using Redmine.Client.Languages;
@@ -18,8 +13,8 @@ namespace Redmine.Client
             New,
             Edit,
         };
-        public TimeEntry CurTimeEntry { get; set; }
-        private Issue issue;
+        private TimeEntry CurTimeEntry { get; }
+        private readonly Issue issue;
         private IList<ProjectMember> projectMembers;
         private eFormType type;
 
@@ -92,18 +87,57 @@ namespace Redmine.Client
 
         private void BtnOKButton_Click(object sender, EventArgs e)
         {
-            CurTimeEntry.SpentOn = datePickerSpentOn.Value;
-            CurTimeEntry.Issue = new IdentifiableName() { Id = issue.Id };
-            CurTimeEntry.User = new IdentifiableName() { Id = ((ProjectMember)comboBoxByUser.SelectedItem).Id };
-            CurTimeEntry.Activity = ((Enumerations.EnumerationItem)comboBoxActivity.SelectedItem).ToIdentifiableName();
-            CurTimeEntry.Hours = decimal.Parse(textBoxSpentHours.Text, Lang.Culture);
-            CurTimeEntry.Comments = textBoxComment.Text;
+            if (type == eFormType.New)
+            {
+                CreateTimeEntry();
+            }
+            else
+            {
+                UpdateTimeEntry();
+            }
+            
+        }
+
+        private void UpdateTimeEntry()
+        {
+            
             try
             {
-                if (type == eFormType.New)
-                    RedmineClientForm.redmine.CreateObject(CurTimeEntry);
-                else
-                    RedmineClientForm.redmine.UpdateObject(CurTimeEntry.Id.ToString(), CurTimeEntry);
+                CurTimeEntry.SpentOn = datePickerSpentOn.Value;
+                CurTimeEntry.Issue = IdentifiableName.Create<IdentifiableName>(issue.Id);
+                CurTimeEntry.Project = issue.Project;
+                //CurTimeEntry.User = new IdentifiableName() { Id = ((ProjectMember)comboBoxByUser.SelectedItem).Id }; not user in api
+                CurTimeEntry.Activity = ((Enumerations.EnumerationItem)comboBoxActivity.SelectedItem).ToIdentifiableName();
+                CurTimeEntry.Hours = decimal.Parse(textBoxSpentHours.Text, Lang.Culture);
+                CurTimeEntry.Comments = textBoxComment.Text;
+                RedmineClientForm.redmine.UpdateObject(CurTimeEntry.Id.ToString(), CurTimeEntry);
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format(Lang.Error_Exception, ex.Message), Lang.Error, MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            }
+            
+        }
+
+        private void CreateTimeEntry()
+        {
+            
+            try
+            {
+                var entry = new TimeEntry()
+                {
+                    Issue = IdentifiableName.Create<IdentifiableName>(issue.Id),
+                    Project = IdentifiableName.Create<IdentifiableName>(issue.Project.Id),
+                    SpentOn = datePickerSpentOn.Value,
+                    Activity = ((Enumerations.EnumerationItem)comboBoxActivity.SelectedItem).ToIdentifiableName(),
+                    Hours = decimal.Parse(textBoxSpentHours.Text, Lang.Culture),
+                    Comments = textBoxComment.Text
+                };
+                //CurTimeEntry.User = new IdentifiableName() { Id = ((ProjectMember)comboBoxByUser.SelectedItem).Id }; not user in api
+                RedmineClientForm.redmine.CreateObject(entry);
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }

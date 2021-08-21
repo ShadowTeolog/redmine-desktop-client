@@ -80,6 +80,7 @@
       <DependentUpon>AttachmentForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ClientProject.cs" />
+    <Compile Include="IssueCategoryDescriptor.cs" />
     <Compile Include="OpenSpecificIssueForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -219,6 +220,7 @@
     <Compile Include="SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="StrangeCallHelper.cs" />
     <Compile Include="TimeEntriesForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -231,6 +233,7 @@
     <Compile Include="TimeEntryForm.Designer.cs">
       <DependentUpon>TimeEntryForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="TrackerRef.cs" />
     <Compile Include="UpdateIssueNoteForm.cs">
       <SubType>Form</SubType>
     </Compile>
