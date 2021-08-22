@@ -1565,7 +1565,7 @@ namespace Redmine.Client
         {
             try
             {
-                currentFilter.StatusId = ((IssueStatus)ComboBoxStatus.SelectedItem).Id;
+                currentFilter.StatusId = ((IIssueStatusRef)ComboBoxStatus.SelectedItem).Id;
             }
             catch (Exception)
             {
@@ -1604,7 +1604,7 @@ namespace Redmine.Client
         {
             try
             {
-                currentFilter.VersionId = ((Redmine.Net.Api.Types.Version)ComboBoxTargetVersion.SelectedItem).Id;
+                currentFilter.VersionId = (ComboBoxTargetVersion.SelectedItem as IVersionRef)?.Id ?? 0;
             }
             catch (Exception)
             {

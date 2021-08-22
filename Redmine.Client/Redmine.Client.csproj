@@ -80,7 +80,9 @@
       <DependentUpon>AttachmentForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ClientProject.cs" />
+    <Compile Include="Filter.cs" />
     <Compile Include="IssueCategoryDescriptor.cs" />
+    <Compile Include="IssueStatusRef.cs" />
     <Compile Include="OpenSpecificIssueForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -145,6 +147,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VersionRef.cs" />
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -266,6 +269,12 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Redmine.Api\src\redmine-net-api\redmine-net-api.csproj">
+      <Project>{fa3d956c-7302-4a79-9494-bee8e3c530c9}</Project>
+      <Name>redmine-net-api</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

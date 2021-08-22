@@ -23,33 +23,14 @@ namespace Redmine.Client
         V41x
     }
 
-    public class Filter : ICloneable
-    {
-        public int TrackerId = 0;
-        public int StatusId = 0;
-        public int PriorityId = 0;
-        public string Subject = "";
-        public int AssignedToId = 0;
-        public int VersionId = 0;
-        public int CategoryId = 0;
-
-        #region ICloneable Members
-
-        public object Clone()
-        {
-            return new Filter { TrackerId = TrackerId, StatusId = StatusId, PriorityId = PriorityId, Subject = Subject, AssignedToId = AssignedToId, VersionId = VersionId, CategoryId = CategoryId };
-        }
-
-        #endregion ICloneable Members
-    }
-
     internal class LoadException : Exception
     {
         public LoadException(String action, Exception innerException) : base(action, innerException)
-{
+        {
 
-}
+        }
     }
+
 
     internal class MainFormData
     {
@@ -61,8 +42,8 @@ namespace Redmine.Client
         public List<ITrackerRef> Trackers { get; }
 
         public List<IIssueCategory> Categories { get; private set; }
-        public List<IssueStatus> Statuses { get;}
-        public List<Redmine.Net.Api.Types.Version> Versions { get;}
+        public List<IIssueStatusRef> Statuses { get;}
+        public List<IVersionRef> Versions { get;}
         public List<ProjectMember> ProjectMembers { get;}
         public List<Enumerations.EnumerationItem> IssuePriorities { get;}
         public List<Enumerations.EnumerationItem> Activities { get;}
@@ -107,8 +88,8 @@ namespace Redmine.Client
 
                     try
                     {
-                        Versions = RedmineClientForm.redmine.GetObjects<Redmine.Net.Api.Types.Version>(InitParameters());
-                        Versions.Insert(0, new Redmine.Net.Api.Types.Version { Id = 0, Name = "" });
+                        Versions = RedmineClientForm.redmine.GetObjects<Redmine.Net.Api.Types.Version>(InitParameters()).Select(i=>(IVersionRef)new VersionRef(i)).ToList();
+                        Versions.Add(new FakeVersionRef(string.Empty));
                     }
                     catch (Exception e)
                     {
@@ -119,10 +100,11 @@ namespace Redmine.Client
 
                 try
                 {
-                    Statuses = new List<IssueStatus>(RedmineClientForm.redmine.GetObjects<IssueStatus>(InitParameters()));
-                    Statuses.Insert(0, new IssueStatus { Id = 0, Name = Languages.Lang.AllOpenIssues });
-                    Statuses.Add(new IssueStatus { Id = -1, Name = Languages.Lang.AllClosedIssues });
-                    Statuses.Add(new IssueStatus { Id = -2, Name = Languages.Lang.AllOpenAndClosedIssues });
+                    Statuses = new List<IIssueStatusRef>();
+                    Statuses.Add(new FakeStatusRef(0, Languages.Lang.AllOpenIssues));
+                    Statuses.AddRange(RedmineClientForm.redmine.GetObjects<IssueStatus>(InitParameters()).Select(i=>new IssueStatusRef(i)));
+                    Statuses.Add(new FakeStatusRef(-1, Languages.Lang.AllClosedIssues));
+                    Statuses.Add(new FakeStatusRef(-2,Languages.Lang.AllOpenAndClosedIssues));
                 }
                 catch (Exception e)
                 {
