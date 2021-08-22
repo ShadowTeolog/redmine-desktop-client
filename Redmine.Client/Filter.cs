@@ -11,6 +11,7 @@ namespace Redmine.Client
         public int AssignedToId = 0;
         public int VersionId = 0;
         public int CategoryId = 0;
+        public bool onlyMe;
 
         #region ICloneable Members
 

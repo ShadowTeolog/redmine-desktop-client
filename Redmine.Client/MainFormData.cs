@@ -46,8 +46,7 @@ namespace Redmine.Client
         public List<IIssueStatusRef> Statuses { get;}
         public List<IVersionRef> Versions { get;}
         public List<ProjectMember> ProjectMembers { get;}
-        public List<Enumerations.EnumerationItem> IssuePriorities { get;}
-        public List<Enumerations.EnumerationItem> Activities { get;}
+        
         public int ProjectId { get; }
 
         public MainFormData(RedmineClient redmineClient, IList<Project> projects, int projectId, bool onlyMe, Filter filter)
@@ -89,8 +88,7 @@ namespace Redmine.Client
 
                     try
                     {
-                        Versions = RedmineClientForm.redmine.GetObjects<Redmine.Net.Api.Types.Version>(InitParameters()).Select(i=>(IVersionRef)new VersionRef(i)).ToList();
-                        Versions.Add(new FakeVersionRef(string.Empty));
+                        Versions = redmineClient.FetchVersionListRefsWithFakeItems(projectId);
                     }
                     catch (Exception e)
                     {
@@ -101,11 +99,8 @@ namespace Redmine.Client
 
                 try
                 {
-                    Statuses = new List<IIssueStatusRef>();
-                    Statuses.Add(new FakeStatusRef(0, Languages.Lang.AllOpenIssues));
-                    Statuses.AddRange(RedmineClientForm.redmine.GetObjects<IssueStatus>(InitParameters()).Select(i=>new IssueStatusRef(i)));
-                    Statuses.Add(new FakeStatusRef(-1, Languages.Lang.AllClosedIssues));
-                    Statuses.Add(new FakeStatusRef(-2,Languages.Lang.AllOpenAndClosedIssues));
+                    Statuses=redmineClient.FetchIssueStatusListRefsWithFakeItems(ProjectId);
+                    
                 }
                 catch (Exception e)
                 {
@@ -114,17 +109,8 @@ namespace Redmine.Client
 
                 try
                 {
-                    if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x && projectId > 0)
-                    {
-                        List<ProjectMembership> projectMembers = (List<ProjectMembership>)RedmineClientForm.redmine.GetObjects<ProjectMembership>(InitParameters());
-                        ProjectMembers = projectMembers.ConvertAll(new Converter<ProjectMembership, ProjectMember>(ProjectMember.MembershipToMember));
-                    }
-                    else
-                    {
-                        var allUsers = RedmineClientForm.redmine.GetObjects<User>();
-                        ProjectMembers = allUsers.ConvertAll(UserToProjectMember);
-                    }
-                    ProjectMembers.Insert(0, new ProjectMember());
+                    ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(projectId);
+                    
                 }
                 catch (Exception)
                 {
@@ -134,19 +120,8 @@ namespace Redmine.Client
 
                 try
                 {
-                    if (RedmineClientForm.RedmineVersion >= ApiVersion.V22x)
-                    {
-                        Enumerations.UpdateIssuePriorities(RedmineClientForm.redmine.GetObjects<IssuePriority>());
-                        Enumerations.SaveIssuePriorities();
-
-                        Enumerations.UpdateActivities(RedmineClientForm.redmine.GetObjects<TimeEntryActivity>());
-                        Enumerations.SaveActivities();
-                    }
-                    IssuePriorities = new List<Enumerations.EnumerationItem>(Enumerations.IssuePriorities);
-                    IssuePriorities.Insert(0, new Enumerations.EnumerationItem { Id = 0, Name = "", IsDefault = false });
-
-                    Activities = new List<Enumerations.EnumerationItem>(Enumerations.Activities);
-                    Activities.Insert(0, new Enumerations.EnumerationItem { Id = 0, Name = "", IsDefault = false });
+                    this.redmineClient.RefreshIssuePrioritiesAndActivities();
+                    
                 }
                 catch (Exception e)
                 {
@@ -167,45 +142,9 @@ namespace Redmine.Client
 
             try
             {
-                var parameters = InitParameters();
-                if (onlyMe)
-                    parameters.Add(RedmineKeys.ASSIGNED_TO_ID, "me");
-                else if (filter.AssignedToId > 0)
-                    parameters.Add(RedmineKeys.ASSIGNED_TO_ID, filter.AssignedToId.ToString());
-
-                if (filter.TrackerId > 0)
-                    parameters.Add(RedmineKeys.TRACKER_ID, filter.TrackerId.ToString());
-
-                if (filter.StatusId > 0)
-                    parameters.Add(RedmineKeys.STATUS_ID, filter.StatusId.ToString());
-                else if (filter.StatusId < 0)
-                {
-                    switch (filter.StatusId)
-                    {
-                        case -1: // all closed issues
-                            parameters.Add(RedmineKeys.STATUS_ID, "closed");
-                            break;
-
-                        case -2: // all open and closed issues
-                            parameters.Add(RedmineKeys.STATUS_ID, " *");
-                            break;
-                    }
-                }
-
-                if (filter.PriorityId > 0)
-                    parameters.Add(RedmineKeys.PRIORITY_ID, filter.PriorityId.ToString());
-
-                if (filter.VersionId > 0)
-                    parameters.Add(RedmineKeys.FIXED_VERSION_ID, filter.VersionId.ToString());
-
-                if (filter.CategoryId > 0)
-                    parameters.Add(RedmineKeys.CATEGORY_ID, filter.CategoryId.ToString());
-
-                if (!String.IsNullOrEmpty(filter.Subject))
-                    parameters.Add(RedmineKeys.SUBJECT, "~" + filter.Subject);
-
-                Issues = RedmineClientForm.redmine.GetObjects<Issue>(parameters);
-                }
+                filter.onlyMe = onlyMe;
+                Issues =  redmineClient.FetchIssueHeadersWithFilter(ProjectId, filter) ;
+            }
             catch (Exception e)
             {
                 throw new LoadException(Languages.Lang.BgWork_LoadIssues, e);

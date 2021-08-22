@@ -5,14 +5,16 @@ using Redmine.Net.Api.Types;
 
 namespace Redmine.Client
 {
-
+    /// <summary>
+    /// Per project data cache
+    /// </summary>
     internal class IssueFormData
     {
         public IList<ProjectTracker> Trackers { get; set; }
-        public List<IssueCategory> Categories { get; set; }
+        public List<IIssueCategory> Categories { get; set; }
         public IList<IssueStatus> Statuses { get; set; }
 //        public List<IdentifiableName> Priorities { get; set; }
-        public List<Redmine.Net.Api.Types.Version> Versions { get; set; }
+        public List<IVersionRef> Versions { get; set; }
 //        public List<Assignee> Watchers { get; set; }
         public List<ProjectMember> ProjectMembers { get; set; }
         public IList<IssuePriority> IssuePriorities { get; set; }

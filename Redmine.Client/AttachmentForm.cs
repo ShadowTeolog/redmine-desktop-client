@@ -42,8 +42,7 @@ namespace Redmine.Client
             //{
             //    if (type == DialogType.Edit)
             //    {
-            //        var file = System.IO.File.ReadAllBytes(textBoxAttachmentFilePath.Text);
-            //        var uploadedFile = RedmineClientForm.redmine.UploadFile(file);
+            //        var uploadedFile = redmineClient.UploadFile(textBoxAttachmentFilePath.Text);
             //        uploadedFile.FileName = Path.GetFileName(textBoxAttachmentFilePath.Text);
             //        uploadedFile.Description = textBoxDescription.Text;
             //        uploadedFile.ContentType = GetMimeType(Path.GetExtension(textBoxAttachmentFilePath.Text));

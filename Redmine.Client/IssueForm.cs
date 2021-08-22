@@ -237,8 +237,7 @@ namespace Redmine.Client
             // set version
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
-                var version = (Redmine.Net.Api.Types.Version)ComboBoxTargetVersion.SelectedItem;
-                if (version.Id != 0)
+                if (ComboBoxTargetVersion.SelectedItem is IVersionRef version && version.Id != 0)
                     newIssue.FixedVersion = StrangeCallHelper.CreateIdentifiableName(version.Id, Name = version.Name);
                 else
                     newIssue.FixedVersion = null;
@@ -255,8 +254,7 @@ namespace Redmine.Client
             // set category
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
-                var category = (IIssueCategory)ComboBoxCategory.SelectedItem;
-                if (category.Id != 0)
+                if (ComboBoxCategory.SelectedItem is IIssueCategory category && category.Id != 0)
                     newIssue.Category = StrangeCallHelper.CreateIdentifiableName(category.Id, Name = category.Name);
                 else
                     newIssue.Category = null;
@@ -279,15 +277,15 @@ namespace Redmine.Client
                         newIssue.Uploads = new List<Upload>();
                         foreach (var a in issue.Attachments)
                         {
-                            byte[] file = System.IO.File.ReadAllBytes(a.ContentUrl);
-                            var uploadedFile = RedmineClientForm.redmine.UploadFile(file);
+                            
+                            var uploadedFile = redmineClient.UploadLocalFile(a.ContentUrl); 
                             uploadedFile.FileName = a.FileName;
                             uploadedFile.Description = a.Description;
                             uploadedFile.ContentType = a.ContentType;
                             newIssue.Uploads.Add(uploadedFile);
                         }
                     }
-                    RedmineClientForm.redmine.CreateObject<Issue>(newIssue);
+                    issue=redmineClient.CreateIssue(newIssue);
                 }
                 else
                 {
@@ -297,7 +295,7 @@ namespace Redmine.Client
                     {
                         if (!String.IsNullOrEmpty(dlg.Note))
                             newIssue.Notes = dlg.Note;
-                        RedmineClientForm.redmine.UpdateObject<Issue>(newIssue.Id.ToString(), newIssue);
+                        redmineClient.UpdateIssue(newIssue.Id, newIssue);
                     }
                     else
                         return;
@@ -750,11 +748,10 @@ namespace Redmine.Client
                         Issue currentIssue = null;
                         if (type == DialogType.Edit)
                         {
-                            var issueParameters = new NameValueCollection { { "include", "journals,relations,children,attachments" } };
-                            currentIssue = RedmineClientForm.redmine.GetObject<Issue>(issueId.ToString(), issueParameters);
+                            currentIssue = redmineClient.FetchIssue(issueId);
                             if (currentIssue.ParentIssue != null && currentIssue.ParentIssue.Id != 0)
                             {
-                                var parentIssue = RedmineClientForm.redmine.GetObject<Issue>(currentIssue.ParentIssue.Id.ToString(CultureInfo.InvariantCulture), null);
+                                var parentIssue = redmineClient.FetchIssueHeader(currentIssue.ParentIssue.Id);
                                 currentIssue.ParentIssue.Name = parentIssue.Subject;
                             }
                             this.projectId = projectId = currentIssue.Project;
@@ -771,28 +768,16 @@ namespace Redmine.Client
                         if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
                         {
                             var parameters = new NameValueCollection { { RedmineKeys.PROJECT_ID, projectId.Id.ToString() } };
-                            var projectParameters = new NameValueCollection { { "include", "trackers" } };
-
-                            var project = RedmineClientForm.redmine.GetObject<Project>(projectId.Id.ToString(), projectParameters);
+                            var project = redmineClient.FetchProjectWithTrackers(projectId.Id);  
                             dataCache.Trackers = project.Trackers;
 
                             dataCache.Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(projectId.Id);
-                            dataCache.Categories.Insert(0, new IssueCategory { Id = 0, Name = "" });
-
-                            dataCache.Statuses = RedmineClientForm.redmine.GetObjects<IssueStatus>(parameters);
-                            dataCache.Versions = (List<Redmine.Net.Api.Types.Version>)RedmineClientForm.redmine.GetObjects<Redmine.Net.Api.Types.Version>(parameters);
-                            dataCache.Versions.Insert(0, new Redmine.Net.Api.Types.Version { Id = 0, Name = "" });
+                            dataCache.Statuses = redmineClient.GetNativeIssueStatusList(projectId.Id);
+                            dataCache.Versions = redmineClient.FetchVersionListRefsWithFakeItems(projectId.Id);
                             if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
                             {
-                                var projectMembers = (List<ProjectMembership>)RedmineClientForm.redmine.GetObjects<ProjectMembership>(parameters);
-                                //RedmineClientForm.DataCache.Watchers = projectMembers.ConvertAll(new Converter<ProjectMembership, Assignee>(MemberToAssignee));
-                                dataCache.ProjectMembers = projectMembers.ConvertAll(new Converter<ProjectMembership, ProjectMember>(ProjectMember.MembershipToMember));
-                                dataCache.ProjectMembers.Insert(0, new ProjectMember(new ProjectMembership { Id = 0, User = new IdentifiableName { Id = 0, Name = "" } }));
-                                if (RedmineClientForm.RedmineVersion >= ApiVersion.V22x)
-                                {
-                                    Enumerations.UpdateIssuePriorities(RedmineClientForm.redmine.GetObjects<IssuePriority>());
-                                    Enumerations.SaveIssuePriorities();
-                                }
+                                dataCache.ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(projectId.Id);
+                                redmineClient.RefreshIssuePrioritiesAndActivities();
                             }
                             if (currentIssue.Relations != null)
                             {
@@ -805,7 +790,7 @@ namespace Redmine.Client
                                         r.IssueId = issueId;
                                         r.Type = ClientIssueRelation.InvertRelationType(r.Type);
                                     }
-                                    var relatedIssue = RedmineClientForm.redmine.GetObject<Issue>(r.IssueToId.ToString(), null);
+                                    var relatedIssue = redmineClient.FetchIssueHeader(r.IssueToId);
                                     currentIssueRelations.Add(new ClientIssueRelation(r, relatedIssue));
                                 }
                             }
@@ -869,7 +854,7 @@ namespace Redmine.Client
         {
             try
             {
-                var dlg = new TimeEntriesForm(issue, DataCache.ProjectMembers);
+                var dlg = new TimeEntriesForm(redmineClient, issue, DataCache.ProjectMembers);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     //BtnRefreshButton_Click(null, null);

@@ -342,7 +342,7 @@ namespace Redmine.Client
                 ComboBoxTracker.Enabled = false;
                 ComboBoxCategory.Enabled = false;
             }
-            ComboBoxPriority.DataSource = data.IssuePriorities;
+            ComboBoxPriority.DataSource = redmineClient.Cache.IssuePriorities;
             ComboBoxPriority.DisplayMember = "Name";
             ComboBoxPriority.ValueMember = "Id";
             ComboBoxPriority.SelectedValue = filter.PriorityId;

@@ -2,7 +2,7 @@
 
 namespace Redmine.Client
 {
-    interface IIssueStatusRef
+    public interface IIssueStatusRef
     {
         int Id { get; }
         string Name { get; }
