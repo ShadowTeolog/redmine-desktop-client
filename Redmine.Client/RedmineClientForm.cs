@@ -34,7 +34,7 @@ namespace Redmine.Client
         private int issueId = 0;
         private int projectId = 0;
         private int activityId = 0;
-        internal static RedmineManager redmine;
+        
         private bool updating = false;
         private User currentUser = null;
         private string currentWorkName;
@@ -65,6 +65,7 @@ namespace Redmine.Client
         /* ugly hack to create a singleton */
         private static readonly RedmineClientForm instance = new RedmineClientForm();
         public static RedmineClientForm Instance { get { return instance; } }
+        private RedmineClient redmineClient;
 
         private RedmineClientForm()
         {
@@ -163,10 +164,14 @@ namespace Redmine.Client
                         }
                     }
 
+
+
                     if (RedmineAuthentication)
-                        redmine = new RedmineManager(RedmineURL, RedmineUser, RedminePassword, Settings.Default.CommunicationType);
+                        redmineClient = RedmineFactory.Connect(RedmineURL, RedmineUser, RedminePassword,
+                            Settings.Default.CommunicationType);
                     else
-                        redmine = new RedmineManager(RedmineURL, Settings.Default.CommunicationType);
+                        redmineClient = RedmineFactory.Connect(RedmineURL, Settings.Default.CommunicationType);
+                    
                     this.Cursor = Cursors.AppStarting;
 
                     AsyncGetFormData(projectId, CheckBoxOnlyMe.Checked);
@@ -207,38 +212,21 @@ namespace Redmine.Client
         private MainFormData PrepareFormData(int projectId, bool onlyMe, Filter filter)
         {
             var parameters = new NameValueCollection();
-            IList<Project> allProjects = redmine.GetObjects<Project>(parameters);
-            IList<Project> projects;
-            if (Settings.Default.OnlyMyProjects)
-                projects = OnlyProjectsForMember(currentUser, allProjects);
-            else
-                projects = allProjects;
+
+            var projects = Settings.Default.OnlyMyProjects 
+                ? redmineClient.FetchMyProjects(currentUser) 
+                : redmineClient.FetchAllProjects();
             if (projects.Count > 0)
             {
                 Projects = MainFormData.ToDictionaryName(projects);
 
                 projectId = GetProjectIdCheckExists(Projects, projectId);
-                return new MainFormData(projects, projectId, onlyMe, filter);
+                return new MainFormData(redmineClient,projects, projectId, onlyMe, filter);
             }
-            throw new Exception(String.Format(Lang.Error_NoProjectsFound, allProjects.Count));
+            throw new Exception(String.Format(Lang.Error_NoProjectsFound, projects.Count));
         }
 
-        private IList<Project> OnlyProjectsForMember(User member, IList<Project> projects)
-        {
-            var memberProjects = new List<Project>();
-            foreach (var p in projects)
-            {
-                foreach (var m in member.Memberships)
-                {
-                    if (p.Id == m.Project.Id)
-                    {
-                        memberProjects.Add(p);
-                        break;
-                    }
-                }
-            }
-            return memberProjects;
-        }
+        
 
         private void FillForm(MainFormData data, Filter filter)
         {
@@ -811,7 +799,8 @@ namespace Redmine.Client
                     };
                     try
                     {
-                        redmine.CreateObject(entry);
+                        redmineClient.CreateTimeEntry(entry);
+                        
                         ResetForm();
                         MessageBox.Show(Lang.CommitSuccessfullText, Lang.CommitSuccessfullTitle, MessageBoxButtons.OK,
                                         MessageBoxIcon.Information);
@@ -968,7 +957,7 @@ namespace Redmine.Client
         /// <param name="e"></param>
         private void BtnNewIssueButton_Click(object sender, EventArgs e)
         {
-            var dlg = new IssueForm(Projects[projectId]);
+            var dlg = new IssueForm(redmineClient, Projects[projectId]);
             dlg.Size = new Size(Settings.Default.IssueWindowSizeX,
                                 Settings.Default.IssueWindowSizeY);
             if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -1053,9 +1042,8 @@ namespace Redmine.Client
             {
                 try
                 {
-                    var parameters = new NameValueCollection();
-                    parameters.Add("include", "memberships");
-                    var newCurrentUser = redmine.GetCurrentUser(parameters);
+                    
+                    var newCurrentUser = redmineClient.GetUserAndMembership(); 
                     return () =>
                     {
                         currentUser = newCurrentUser;
@@ -1134,7 +1122,7 @@ namespace Redmine.Client
             }
         }
 
-        public static void ShowIssue(Issue issue)
+        public void ShowIssue(Issue issue)
         {
             try
             {
@@ -1149,7 +1137,7 @@ namespace Redmine.Client
                         }
                     }
                 }
-                var dlg = new IssueForm(issue);
+                var dlg = new IssueForm(redmineClient,issue);
                 dlg.Size = new Size(Settings.Default.IssueWindowSizeX,
                                     Settings.Default.IssueWindowSizeY);
                 dlg.Show();
@@ -1242,39 +1230,37 @@ namespace Redmine.Client
 
         Issue RequestIssueSync(int Id)
         {
-            var issue = redmine.GetObject<Issue>(Id.ToString(), new NameValueCollection
-            {
-                { RedmineKeys.INCLUDE, $"{RedmineKeys.CHILDREN},{RedmineKeys.ATTACHMENTS},{RedmineKeys.RELATIONS},{RedmineKeys.CHANGE_SETS},{RedmineKeys.JOURNALS},{RedmineKeys.WATCHERS}" }
-            });
+            var issue = redmineClient.FetchIssue(Id); 
             return issue;
         }
         private bool UpdateIssueState(Issue issue, int idState)
         {
-            var originalIssue = redmine.GetObject<Issue>(issue.Id.ToString(), null);
+            var originalIssue = redmineClient.FetchIssueHeader(issue.Id);
             if (originalIssue.Status.Id == idState)
                 return false;
 
             var newIssue = (Issue)originalIssue.Clone();
 
-            
-            var statusDict = MainFormData.ToDictionaryName<IssueStatus>(redmine.GetObjects<IssueStatus>());
-            if (!statusDict.TryGetValue(idState, out var newStatus))
+
+            var statusIdAndName=redmineClient.ResolveIssueStatusIdToName(idState);
+            if (statusIdAndName == null)
                 throw new Exception(Lang.Error_ClosedStatusUnknown);
 
-            newIssue.Status = StrangeCallHelper.CreateIdentifiableName(newStatus.Id, Name = newStatus.Name);
+            newIssue.Status = statusIdAndName;
             if (Settings.Default.AddNoteOnChangeStatus)
             {
                 var dlg = new UpdateIssueNoteForm(originalIssue, newIssue);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     newIssue.Notes = dlg.Note;
-                    RedmineClientForm.redmine.UpdateObject<Issue>(originalIssue.Id.ToString(), newIssue);
+                    redmineClient.UpdateIssue(originalIssue.Id, newIssue);
+                    
                 }
                 else
                     return false;
             }
             else
-                RedmineClientForm.redmine.UpdateObject<Issue>(originalIssue.Id.ToString(), newIssue);
+                redmineClient.UpdateIssue(originalIssue.Id, newIssue);
             return true;
         }
 

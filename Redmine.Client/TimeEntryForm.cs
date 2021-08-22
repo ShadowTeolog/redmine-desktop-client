@@ -14,13 +14,15 @@ namespace Redmine.Client
             Edit,
         };
         private TimeEntry CurTimeEntry { get; }
+        private readonly RedmineClient redmineClient;
         private readonly Issue issue;
         private IList<ProjectMember> projectMembers;
         private eFormType type;
 
-        public TimeEntryForm(Issue issue, IList<ProjectMember> projectMembers)
+        public TimeEntryForm(RedmineClient redmineClient, Issue issue, IList<ProjectMember> projectMembers)
         {
             InitializeComponent();
+            this.redmineClient = redmineClient;
             this.issue = issue;
             this.projectMembers = projectMembers;
             type = eFormType.New;
@@ -29,9 +31,10 @@ namespace Redmine.Client
             LoadCombos();
             comboBoxByUser.SelectedValue = RedmineClientForm.Instance.CurrentUser.Id;
         }
-        public TimeEntryForm(Issue issue, IList<ProjectMember> projectMembers, TimeEntry timeEntry)
+        public TimeEntryForm(RedmineClient redmineClient, Issue issue, IList<ProjectMember> projectMembers, TimeEntry timeEntry)
         {
             InitializeComponent();
+            this.redmineClient = redmineClient;
             this.issue = issue;
             this.projectMembers = projectMembers;
             type = eFormType.Edit;
@@ -110,7 +113,7 @@ namespace Redmine.Client
                 CurTimeEntry.Activity = ((Enumerations.EnumerationItem)comboBoxActivity.SelectedItem).ToIdentifiableName();
                 CurTimeEntry.Hours = decimal.Parse(textBoxSpentHours.Text, Lang.Culture);
                 CurTimeEntry.Comments = textBoxComment.Text;
-                RedmineClientForm.redmine.UpdateObject(CurTimeEntry.Id.ToString(), CurTimeEntry);
+                redmineClient.UpdateTimeEntry(CurTimeEntry.Id, CurTimeEntry);
                 this.DialogResult = DialogResult.OK;
                 this.Close();
 
@@ -137,7 +140,7 @@ namespace Redmine.Client
                     Comments = textBoxComment.Text
                 };
                 //CurTimeEntry.User = new IdentifiableName() { Id = ((ProjectMember)comboBoxByUser.SelectedItem).Id }; not user in api
-                RedmineClientForm.redmine.CreateObject(entry);
+                redmineClient.CreateTimeEntry(entry);
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }

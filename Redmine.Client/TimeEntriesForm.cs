@@ -14,12 +14,14 @@ namespace Redmine.Client
 {
     public partial class TimeEntriesForm : BgWorker
     {
+        private readonly RedmineClient redmineClient;
         private Issue issue;
         private IList<TimeEntry> timeEntries;
         private IList<ProjectMember> projectMembers;
 
-        public TimeEntriesForm(Issue issue, IList<ProjectMember> projectMembers)
+        public TimeEntriesForm(RedmineClient redmineClient, Issue issue, IList<ProjectMember> projectMembers)
         {
+            this.redmineClient = redmineClient;
             this.issue = issue;
             this.projectMembers = projectMembers;
             InitializeComponent();
@@ -39,8 +41,8 @@ namespace Redmine.Client
                 {
                     try
                     {
-                        NameValueCollection parameters = new NameValueCollection { { "issue_id", issue.Id.ToString() } };
-                        IList<TimeEntry> entries = RedmineClientForm.redmine.GetObjects<TimeEntry>(parameters);
+                        var entries = redmineClient.GetTimeEntriesForIssue(issue.Id);
+                        
 
                         //Let main thread fill form data...
                         return () =>
@@ -113,10 +115,10 @@ namespace Redmine.Client
 
         private void DataGridViewTimeEntries_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            TimeEntry timeEntry = (TimeEntry)DataGridViewTimeEntries.Rows[e.RowIndex].DataBoundItem;
+            var timeEntry = (TimeEntry)DataGridViewTimeEntries.Rows[e.RowIndex].DataBoundItem;
             try
             {
-                TimeEntryForm dlg = new TimeEntryForm(issue, projectMembers, timeEntry);
+                var dlg = new TimeEntryForm(redmineClient, issue, projectMembers, timeEntry);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     AsyncLoadTimeEntries();
@@ -132,7 +134,7 @@ namespace Redmine.Client
         {
             try
             {
-                TimeEntryForm dlg = new TimeEntryForm(issue, projectMembers);
+                var dlg = new TimeEntryForm(redmineClient,issue, projectMembers);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     AsyncLoadTimeEntries();
@@ -152,7 +154,7 @@ namespace Redmine.Client
             try
             {
                 TimeEntry timeEntry = (TimeEntry)DataGridViewTimeEntries.SelectedRows[0].DataBoundItem;
-                TimeEntryForm dlg = new TimeEntryForm(issue, projectMembers, timeEntry);
+                TimeEntryForm dlg = new TimeEntryForm(redmineClient, issue, projectMembers, timeEntry);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     AsyncLoadTimeEntries();
@@ -179,7 +181,8 @@ namespace Redmine.Client
                     {
                         try
                         {
-                            RedmineClientForm.redmine.DeleteObject<TimeEntry>(timeEntry.Id.ToString(), null);
+                            redmineClient.DeleteTimeEntry(timeEntry.Id);
+                            
                             return () =>
                                 {
                                     AsyncLoadTimeEntries();

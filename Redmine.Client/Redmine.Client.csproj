@@ -139,6 +139,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RedmineClient.cs" />
     <Compile Include="RedmineClientForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -147,6 +148,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RedmineFactory.cs" />
     <Compile Include="VersionRef.cs" />
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>

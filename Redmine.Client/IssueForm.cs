@@ -8,6 +8,7 @@ using Redmine.Client.Languages;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Globalization;
+using Redmine.Net.Api;
 
 namespace Redmine.Client
 {
@@ -58,6 +59,7 @@ namespace Redmine.Client
             }
         };
 
+        private readonly RedmineClient redmineClient;
         private Project project;
         private int issueId = 0;
         private Issue issue;
@@ -76,10 +78,11 @@ namespace Redmine.Client
         private const int RelationsHeight = 100;
         private const int ParentHeight = 24;
 
-        public IssueForm(Project project)
+        public IssueForm(RedmineClient redmineClient , Project project)
         {
+            this.redmineClient = redmineClient;
             this.project = project;
-            this.projectId = new IdentifiableName { Id = project.Id, Name = project.Name } ;
+            this.projectId = StrangeCallHelper.CreateIdentifiableName(project.Id,project.Name);
             this.type = DialogType.New;
             InitializeComponent();
             UpdateTitle(null);
@@ -95,7 +98,7 @@ namespace Redmine.Client
             issue.Attachments = new List<Attachment>();
         }
 
-        public IssueForm(Issue issue)
+        public IssueForm(RedmineClient redmineClient, Issue issue)
         {
             this.issueId = issue.Id;
             this.projectId = issue.Project;
@@ -178,7 +181,7 @@ namespace Redmine.Client
                 {
                     var selectedMember = (ProjectMember)ComboBoxAssignedTo.SelectedItem;
                     if (selectedMember.Id != 0)
-                        newIssue.AssignedTo = new IdentifiableName { Id = selectedMember.Id, Name = selectedMember.Name };
+                        newIssue.AssignedTo = StrangeCallHelper.CreateIdentifiableName(selectedMember.Id,selectedMember.Name);
                     else
                         newIssue.AssignedTo = null;
                 }
@@ -206,10 +209,9 @@ namespace Redmine.Client
                 newIssue.DoneRatio = null;
 
             // set priority
-            if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
-                newIssue.Priority = ((Enumerations.EnumerationItem)ComboBoxPriority.SelectedItem).ToIdentifiableName();
-            else
-                newIssue.Priority = issue.Priority;
+            newIssue.Priority = RedmineClientForm.RedmineVersion >= ApiVersion.V13x 
+                ? ((Enumerations.EnumerationItem)ComboBoxPriority.SelectedItem).ToIdentifiableName()
+                : issue.Priority;
 
             // set start date
             if (DateStart.Enabled && cbStartDate.Checked)
@@ -227,7 +229,7 @@ namespace Redmine.Client
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
                 var status = (IssueStatus)ComboBoxStatus.SelectedItem;
-                newIssue.Status = new IdentifiableName { Id = status.Id, Name = status.Name };
+                newIssue.Status = StrangeCallHelper.CreateIdentifiableName(status.Id,status.Name);
             }
             else
                 newIssue.Status = issue.Status;
@@ -237,7 +239,7 @@ namespace Redmine.Client
             {
                 var version = (Redmine.Net.Api.Types.Version)ComboBoxTargetVersion.SelectedItem;
                 if (version.Id != 0)
-                    newIssue.FixedVersion = new IdentifiableName { Id = version.Id, Name = version.Name };
+                    newIssue.FixedVersion = StrangeCallHelper.CreateIdentifiableName(version.Id, Name = version.Name);
                 else
                     newIssue.FixedVersion = null;
             }
@@ -277,7 +279,7 @@ namespace Redmine.Client
                         newIssue.Uploads = new List<Upload>();
                         foreach (var a in issue.Attachments)
                         {
-                            byte[] file = File.ReadAllBytes(a.ContentUrl);
+                            byte[] file = System.IO.File.ReadAllBytes(a.ContentUrl);
                             var uploadedFile = RedmineClientForm.redmine.UploadFile(file);
                             uploadedFile.FileName = a.FileName;
                             uploadedFile.Description = a.Description;
@@ -768,13 +770,13 @@ namespace Redmine.Client
                         }
                         if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
                         {
-                            var parameters = new NameValueCollection { { "project_id", projectId.Id.ToString() } };
+                            var parameters = new NameValueCollection { { RedmineKeys.PROJECT_ID, projectId.Id.ToString() } };
                             var projectParameters = new NameValueCollection { { "include", "trackers" } };
 
                             var project = RedmineClientForm.redmine.GetObject<Project>(projectId.Id.ToString(), projectParameters);
                             dataCache.Trackers = project.Trackers;
 
-                            dataCache.Categories = new List<IssueCategory>(RedmineClientForm.redmine.GetObjects<IssueCategory>(parameters));
+                            dataCache.Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(projectId.Id);
                             dataCache.Categories.Insert(0, new IssueCategory { Id = 0, Name = "" });
 
                             dataCache.Statuses = RedmineClientForm.redmine.GetObjects<IssueStatus>(parameters);
