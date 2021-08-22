@@ -159,12 +159,19 @@ namespace Redmine.Client
 
         private void BtnSaveButton_Click(object sender, EventArgs e)
         {
-            var newIssue = (Issue)issue.Clone();
             if (type == DialogType.Edit)
-                newIssue.Id = this.issue.Id;
+                UpdateIssue(); 
+            else
+                CreateIssue();
+
+
+        }
+
+        private void UpdateIssue()
+        {
             // first check subject as it is mandatory
-            newIssue.Subject = TextBoxSubject.Text;
-            if (String.IsNullOrEmpty(newIssue.Subject))
+            issue.Subject = TextBoxSubject.Text;
+            if (String.IsNullOrEmpty(issue.Subject))
             {
                 MessageBox.Show(Lang.Error_IssueSubjectMandatory,
                             Lang.Error, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -173,133 +180,97 @@ namespace Redmine.Client
             }
 
             // set project identification.
-            newIssue.Project = projectId;
+            issue.Project = projectId;
 
             // set assigned to
-            try {
+            try
+            {
                 if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
                 {
                     var selectedMember = (ProjectMember)ComboBoxAssignedTo.SelectedItem;
                     if (selectedMember.Id != 0)
-                        newIssue.AssignedTo = StrangeCallHelper.CreateIdentifiableName(selectedMember.Id,selectedMember.Name);
+                        issue.AssignedTo = StrangeCallHelper.CreateIdentifiableName(selectedMember.Id, selectedMember.Name);
                     else
-                        newIssue.AssignedTo = null;
+                        issue.AssignedTo = null;
                 }
-                else if (type == DialogType.Edit)
-                {
-                    newIssue.AssignedTo = issue.AssignedTo;
-                }
-            } catch (Exception) {}
+            }
+            catch (Exception) { }
 
             // set description
-            newIssue.Description = TextBoxDescription.Text;
+            issue.Description = TextBoxDescription.Text;
 
             // set estimated hours
-            float time;
-            if (float.TryParse(TextBoxEstimatedTime.Text, out time))
-                newIssue.EstimatedHours = time;
+            if (float.TryParse(TextBoxEstimatedTime.Text, out var time))
+                issue.EstimatedHours = time;
             else
-                newIssue.EstimatedHours = null;
+                issue.EstimatedHours = null;
 
             // set done ratio
             var doneRatio = Convert.ToInt32(numericUpDown1.Value);
             if (doneRatio >= 0)
-                newIssue.DoneRatio = doneRatio;
+                issue.DoneRatio = doneRatio;
             else
-                newIssue.DoneRatio = null;
+                issue.DoneRatio = null;
 
             // set priority
-            newIssue.Priority = RedmineClientForm.RedmineVersion >= ApiVersion.V13x 
-                ? ((Enumerations.EnumerationItem)ComboBoxPriority.SelectedItem).ToIdentifiableName()
-                : issue.Priority;
+            if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
+            {
+                issue.Priority = ((Enumerations.EnumerationItem)ComboBoxPriority.SelectedItem).ToIdentifiableName();
+            }
 
             // set start date
             if (DateStart.Enabled && cbStartDate.Checked)
-                newIssue.StartDate = DateStart.Value;
+                issue.StartDate = DateStart.Value;
             else
-                newIssue.StartDate = null;
+                issue.StartDate = null;
 
             // set due date
             if (DateDue.Enabled && cbDueDate.Checked)
-                newIssue.DueDate = DateDue.Value;
+                issue.DueDate = DateDue.Value;
             else
-                newIssue.DueDate = null;
+                issue.DueDate = null;
 
             // set status
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
                 var status = (IssueStatus)ComboBoxStatus.SelectedItem;
-                newIssue.Status = StrangeCallHelper.CreateIdentifiableName(status.Id,status.Name);
+                issue.Status = StrangeCallHelper.CreateIdentifiableName(status.Id, status.Name);
             }
-            else
-                newIssue.Status = issue.Status;
 
             // set version
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
                 if (ComboBoxTargetVersion.SelectedItem is IVersionRef version && version.Id != 0)
-                    newIssue.FixedVersion = StrangeCallHelper.CreateIdentifiableName(version.Id, Name = version.Name);
+                    issue.FixedVersion = StrangeCallHelper.CreateIdentifiableName(version.Id, Name = version.Name);
                 else
-                    newIssue.FixedVersion = null;
+                    issue.FixedVersion = null;
             }
-            else
-                newIssue.FixedVersion = issue.FixedVersion;
 
             // set tracker
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
-                newIssue.Tracker = (ProjectTracker)ComboBoxTracker.SelectedItem;
-            else
-                newIssue.Tracker = issue.Tracker;
+                issue.Tracker = (ProjectTracker)ComboBoxTracker.SelectedItem;
 
             // set category
             if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
             {
                 if (ComboBoxCategory.SelectedItem is IIssueCategory category && category.Id != 0)
-                    newIssue.Category = StrangeCallHelper.CreateIdentifiableName(category.Id, Name = category.Name);
+                    issue.Category = StrangeCallHelper.CreateIdentifiableName(category.Id, Name = category.Name);
                 else
-                    newIssue.Category = null;
+                    issue.Category = null;
             }
-            else
-                newIssue.Category = issue.Category;
-
-            // workaround for clone-issue in API
-            newIssue.ParentIssue = issue.ParentIssue;
-            newIssue.UpdatedOn = issue.UpdatedOn;
-            newIssue.CreatedOn = issue.CreatedOn;
 
             try
             {
-                if (type == DialogType.New)
+                // ask for additional note...
+                var dlg = new UpdateIssueNoteForm(issue, issue);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    if (issue.Attachments.Count >= 0)
-                    {
-                        // first upload all attachment
-                        newIssue.Uploads = new List<Upload>();
-                        foreach (var a in issue.Attachments)
-                        {
-                            
-                            var uploadedFile = redmineClient.UploadLocalFile(a.ContentUrl); 
-                            uploadedFile.FileName = a.FileName;
-                            uploadedFile.Description = a.Description;
-                            uploadedFile.ContentType = a.ContentType;
-                            newIssue.Uploads.Add(uploadedFile);
-                        }
-                    }
-                    issue=redmineClient.CreateIssue(newIssue);
+                    if (!String.IsNullOrEmpty(dlg.Note))
+                        issue.Notes = dlg.Note;
+                    redmineClient.UpdateIssue(issue.Id, issue);
                 }
                 else
-                {
-                    // ask for additional note...
-                    var dlg = new UpdateIssueNoteForm(issue, newIssue);
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                    {
-                        if (!String.IsNullOrEmpty(dlg.Note))
-                            newIssue.Notes = dlg.Note;
-                        redmineClient.UpdateIssue(newIssue.Id, newIssue);
-                    }
-                    else
-                        return;
-                }
+                    return;
 
                 // resize to screen without children and parents...
                 SetOriginalSize();
@@ -311,12 +282,130 @@ namespace Redmine.Client
             }
             catch (Exception ex)
             {
-                if (type == DialogType.New)
-                    MessageBox.Show(String.Format(Lang.Error_CreateIssueFailed, ex.Message),
+                  MessageBox.Show(String.Format(Lang.Error_UpdateIssueFailed, ex.Message),
                                 Lang.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void CreateIssue()
+        {
+            // first check subject as it is mandatory
+            issue.Subject = TextBoxSubject.Text;
+            if (string.IsNullOrEmpty(issue.Subject))
+            {
+                MessageBox.Show(Lang.Error_IssueSubjectMandatory,
+                            Lang.Error, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                TextBoxSubject.Focus();
+                return;
+            }
+
+            // set project identification.
+            issue.Project = projectId;
+
+            // set assigned to
+            try {
+                if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
+                {
+                    if (ComboBoxAssignedTo.SelectedItem is ProjectMember selectedMember && selectedMember.Id != 0)
+                        issue.AssignedTo = StrangeCallHelper.CreateIdentifiableName(selectedMember.Id,selectedMember.Name);
+                    else
+                        issue.AssignedTo = null;
+                }
+            } catch (Exception) {}
+
+            // set description
+            issue.Description = TextBoxDescription.Text;
+
+            // set estimated hours
+            if (float.TryParse(TextBoxEstimatedTime.Text, out var time))
+                issue.EstimatedHours = time;
+            else
+                issue.EstimatedHours = null;
+
+            // set done ratio
+            var doneRatio = Convert.ToInt32(numericUpDown1.Value);
+            if (doneRatio >= 0)
+                issue.DoneRatio = doneRatio;
+            else
+                issue.DoneRatio = null;
+
+            // set priority
+            if(RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
+                issue.Priority=((Enumerations.EnumerationItem)ComboBoxPriority.SelectedItem).ToIdentifiableName();
+
+            // set start date
+            if (DateStart.Enabled && cbStartDate.Checked)
+                issue.StartDate = DateStart.Value;
+            else
+                issue.StartDate = null;
+
+            // set due date
+            if (DateDue.Enabled && cbDueDate.Checked)
+                issue.DueDate = DateDue.Value;
+            else
+                issue.DueDate = null;
+
+            // set status
+            if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
+            {
+                var status = (IssueStatus)ComboBoxStatus.SelectedItem;
+                issue.Status = StrangeCallHelper.CreateIdentifiableName(status.Id,status.Name);
+            }
+            
+
+            // set version
+            if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
+            {
+                if (ComboBoxTargetVersion.SelectedItem is IVersionRef version && version.Id != 0)
+                    issue.FixedVersion = StrangeCallHelper.CreateIdentifiableName(version.Id, Name = version.Name);
                 else
-                    MessageBox.Show(String.Format(Lang.Error_UpdateIssueFailed, ex.Message),
+                    issue.FixedVersion = null;
+            }
+
+            // set tracker
+            if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
+                issue.Tracker = (ProjectTracker)ComboBoxTracker.SelectedItem;
+
+            // set category
+            if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
+            {
+                if (ComboBoxCategory.SelectedItem is IIssueCategory category && category.Id != 0)
+                    issue.Category = StrangeCallHelper.CreateIdentifiableName(category.Id, Name = category.Name);
+                else
+                    issue.Category = null;
+            }
+            
+
+            try
+            {
+                if (issue.Attachments.Count >= 0)
+                {
+                    // first upload all attachment
+                    issue.Uploads = new List<Upload>();
+                    foreach (var a in issue.Attachments)
+                    {
+                        
+                        var uploadedFile = redmineClient.UploadLocalFile(a.ContentUrl); 
+                        uploadedFile.FileName = a.FileName;
+                        uploadedFile.Description = a.Description;
+                        uploadedFile.ContentType = a.ContentType;
+                        issue.Uploads.Add(uploadedFile);
+                    }
+                }
+                issue=redmineClient.CreateIssue(issue);
+                // resize to screen without children and parents...
+                SetOriginalSize();
+
+                this.DialogResult = DialogResult.OK;
+                if (type == DialogType.Edit)
+                    RedmineClientForm.Instance.Invoke(new AsyncCloseForm(RedmineClientForm.Instance.IssueFormClosed), this.DialogResult, Size);
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format(Lang.Error_CreateIssueFailed, ex.Message),
                                 Lang.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
             }
         }
 
@@ -673,7 +762,10 @@ namespace Redmine.Client
                     {
                         DataGridViewRelations.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                     }
-                    catch (Exception) { }
+                    catch (Exception)
+                    {
+
+                    }
                     DataGridViewRelations.RowHeadersWidth = 20;
                     foreach (DataGridViewColumn column in DataGridViewRelations.Columns)
                     {
@@ -755,30 +847,6 @@ namespace Redmine.Client
                                 currentIssue.ParentIssue.Name = parentIssue.Subject;
                             }
                             this.projectId = projectId = currentIssue.Project;
-                        }
-                        else
-                        {
-                            // initialize new objects
-                            currentIssue = new Issue
-                            {
-                                Subject = Lang.NewIssue,
-                                Attachments = new List<Attachment>()
-                            };
-                        }
-                        if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
-                        {
-                            var parameters = new NameValueCollection { { RedmineKeys.PROJECT_ID, projectId.Id.ToString() } };
-                            var project = redmineClient.FetchProjectWithTrackers(projectId.Id);  
-                            dataCache.Trackers = project.Trackers;
-
-                            dataCache.Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(projectId.Id);
-                            dataCache.Statuses = redmineClient.GetNativeIssueStatusList(projectId.Id);
-                            dataCache.Versions = redmineClient.FetchVersionListRefsWithFakeItems(projectId.Id);
-                            if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
-                            {
-                                dataCache.ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(projectId.Id);
-                                redmineClient.RefreshIssuePrioritiesAndActivities();
-                            }
                             if (currentIssue.Relations != null)
                             {
                                 foreach (var r in currentIssue.Relations)
@@ -794,6 +862,29 @@ namespace Redmine.Client
                                     currentIssueRelations.Add(new ClientIssueRelation(r, relatedIssue));
                                 }
                             }
+                        }
+                        else
+                        {
+                            // initialize new objects
+                            currentIssue = new Issue
+                            {
+                                Subject = Lang.NewIssue,
+                                Attachments = new List<Attachment>()
+                            };
+                        }
+                        if (RedmineClientForm.RedmineVersion >= ApiVersion.V13x)
+                        {
+                            var project = redmineClient.FetchProjectWithTrackers(projectId.Id);  
+                            dataCache.Trackers = project.Trackers;
+                            dataCache.Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(projectId.Id);
+                            dataCache.Statuses = redmineClient.GetNativeIssueStatusList(projectId.Id);
+                            dataCache.Versions = redmineClient.FetchVersionListRefsWithFakeItems(projectId.Id);
+                            if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
+                            {
+                                dataCache.ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(projectId.Id);
+                                redmineClient.RefreshIssuePrioritiesAndActivities();
+                            }
+                            
                         }
                         return () =>
                             {
