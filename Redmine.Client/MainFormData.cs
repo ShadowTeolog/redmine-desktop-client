@@ -48,10 +48,11 @@ namespace Redmine.Client
         public List<ProjectMember> ProjectMembers { get;}
         
         public int ProjectId { get; }
+        public string CurrentProjectIdentity => Projects.FirstOrDefault(p => p.Id == ProjectId)?.Identifier;
 
         public MainFormData(RedmineClient redmineClient, IList<Project> projects, int projectId, bool onlyMe, Filter filter)
         {
-            var projectindentity = projects.FirstOrDefault(p => p.Id == projectId)?.Identifier;
+            var currentproject = projects.FirstOrDefault(p => p.Id == projectId);
             this.redmineClient = redmineClient;
             ProjectId = projectId;
             Projects.Add(new FakeClientProject(FakeClientProject.FakeProjectId.AllIssues, Languages.Lang.ShowAllIssues));
@@ -89,7 +90,7 @@ namespace Redmine.Client
 
                     try
                     {
-                        Versions = redmineClient.FetchVersionListRefsWithFakeItems(projectId);
+                        Versions = redmineClient.FetchVersionListRefsWithFakeItems(currentproject?.Identifier);
                     }
                     catch (Exception e)
                     {
@@ -100,7 +101,7 @@ namespace Redmine.Client
 
                 try
                 {
-                    Statuses=redmineClient.FetchIssueStatusListRefsWithFakeItems(ProjectId);
+                    Statuses=redmineClient.FetchIssueStatusListRefsWithFakeItems(currentproject?.Identifier);
                     
                 }
                 catch (Exception e)
@@ -110,7 +111,7 @@ namespace Redmine.Client
 
                 try
                 {
-                    ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(projectId);
+                    ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(currentproject?.Identifier);
                     
                 }
                 catch (Exception)
@@ -145,7 +146,7 @@ namespace Redmine.Client
             {
                 
                 filter.onlyMe = onlyMe;
-                Issues =  redmineClient.FetchIssueHeadersWithFilter(projectindentity, filter) ;
+                Issues =  redmineClient.FetchIssueHeadersWithFilter(currentproject, filter) ;
             }
             catch (Exception e)
             {
@@ -159,37 +160,13 @@ namespace Redmine.Client
         {
             try
             {
-                Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(ProjectId);
+                Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(CurrentProjectIdentity);
                 
             }
             catch (Exception e)
             {
                 throw new LoadException(Languages.Lang.BgWork_LoadCategories, e);
             }
-        }
-
-        private NameValueCollection InitParameters()
-        {
-            var parameters = new NameValueCollection();
-            if (ProjectId != -1)
-                parameters.Add(RedmineKeys.PROJECT_ID, ProjectId.ToString());
-            return parameters;
-        }
-
-
-        private static ProjectMember UserToProjectMember(User user)
-        {
-            return new ProjectMember(user);
-        }
-
-        public static Dictionary<int, T> ToDictionaryId<T>(IList<T> list) where T : Identifiable<T>, System.IEquatable<T>
-        {
-            Dictionary<int, T> dict = new Dictionary<int,T>();
-            foreach (T element in list)
-            {
-                dict.Add(element.Id, element);
-            }
-            return dict;
         }
 
         public static Dictionary<int, Y> ToDictionaryName<Y>(IList<Y> list) where Y : IdentifiableName

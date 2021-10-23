@@ -133,28 +133,28 @@ namespace Redmine.Client
                 : new List<CustomField>();
         }
 
-        public List<IIssueCategory> FetchIssueCategoryRefsWithFakeItems(int projectId)
+        public List<IIssueCategory> FetchIssueCategoryRefsWithFakeItems(string ProjectIdentity)
         {
-            var parameters = ProjectParametersFilter(projectId);
+            var parameters = ProjectParametersFilter(ProjectIdentity);
             var nativelist = redmine.GetObjects<IssueCategory>(parameters);
             var result = new List<IIssueCategory> { new FakeIssueCategory("") };
             result.AddRange(nativelist.Select(i => (IIssueCategory)new IssueCategoryDescriptor(i)));
             return result;
         }
 
-        private static NameValueCollection ProjectParametersFilter(int projectId)
+        private static NameValueCollection ProjectParametersFilter(string projectIdentity)
         {
-            var parameters = (projectId > 0)
-                ? new NameValueCollection { { RedmineKeys.PROJECT_ID, projectId.ToString() } }
+            var parameters = (projectIdentity != null)
+                ? new NameValueCollection { { RedmineKeys.PROJECT_ID, projectIdentity } }
                 : null;
             return parameters;
         }
 
-        public List<Issue> FetchIssueHeadersWithFilter(string projectIdentity, Filter filter)
+        public List<Issue> FetchIssueHeadersWithFilter(Project projectIdentity, Filter filter)
         {
             var parameters = new NameValueCollection();
-            if (!string.IsNullOrWhiteSpace(projectIdentity))
-                parameters.Add(RedmineKeys.PROJECT_ID, projectIdentity);
+            if (projectIdentity!=null)
+                parameters.Add(RedmineKeys.PROJECT_ID, projectIdentity.Identifier);
             if (filter.onlyMe)
                 parameters.Add(RedmineKeys.ASSIGNED_TO_ID, "me");
             else if (filter.AssignedToId > 0)
@@ -194,14 +194,14 @@ namespace Redmine.Client
 
         }
 
-        public List<IssueStatus> GetNativeIssueStatusList(int projectId)
+        public List<IssueStatus> GetNativeIssueStatusList(string  projectIdentity)
         {
-            var parameters = ProjectParametersFilter(projectId);
+            var parameters = ProjectParametersFilter(projectIdentity);
             return redmine.GetObjects<IssueStatus>(parameters);
         }
-        public List<IIssueStatusRef> FetchIssueStatusListRefsWithFakeItems(int projectId)
+        public List<IIssueStatusRef> FetchIssueStatusListRefsWithFakeItems(string projectIdentity)
         {
-            var nativeStatusList = GetNativeIssueStatusList(projectId);
+            var nativeStatusList = GetNativeIssueStatusList(projectIdentity);
             var result= new List<IIssueStatusRef> { new FakeStatusRef(0, Languages.Lang.AllOpenIssues) };
             result.AddRange(nativeStatusList.Select(i => new IssueStatusRef(i)));
             result.Add(new FakeStatusRef(-1, Languages.Lang.AllClosedIssues));
@@ -209,21 +209,21 @@ namespace Redmine.Client
             return result;
         }
 
-        public List<IVersionRef> FetchVersionListRefsWithFakeItems(int projectId)
+        public List<IVersionRef> FetchVersionListRefsWithFakeItems(string projectIdentity)
         {
-            var parameters = ProjectParametersFilter(projectId);
+            var parameters = ProjectParametersFilter(projectIdentity);
             var result= redmine.GetObjects<Redmine.Net.Api.Types.Version>(parameters).Select(i => (IVersionRef)new VersionRef(i)).ToList();
             result.Add(new FakeVersionRef(string.Empty));
             return result;
         }
 
-        public List<ProjectMember> FetchUserListWithProjectFilterAndFakeItem(int projectId)
+        public List<ProjectMember> FetchUserListWithProjectFilterAndFakeItem(string projectIdentity)
         {
             var userList = new List<ProjectMember> { new ProjectMember() };
 
-            if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x && projectId > 0)
+            if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x && !string.IsNullOrWhiteSpace(projectIdentity))
             {
-                var parameters = ProjectParametersFilter(projectId);
+                var parameters = ProjectParametersFilter(projectIdentity);
                 var projectMembers = redmine.GetObjects<ProjectMembership>(parameters);
                 userList.AddRange(projectMembers.Select(i=>new ProjectMember(i)));
             }

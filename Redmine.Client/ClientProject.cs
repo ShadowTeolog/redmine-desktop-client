@@ -8,6 +8,7 @@ namespace Redmine.Client
     {
         int Id { get; }
         string Name { get; }
+        string Identifier { get; }
     }
     public class ClientProject : IClientProject
     {
@@ -40,7 +41,8 @@ namespace Redmine.Client
     {
         private readonly FakeProjectId id;
         public string Name { get; }
-        
+        public string Identifier => null; //no identity
+
 
         public enum FakeProjectId
         {

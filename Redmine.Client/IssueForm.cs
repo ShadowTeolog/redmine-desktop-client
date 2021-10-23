@@ -902,12 +902,12 @@ namespace Redmine.Client
                         {
                             var project = redmineClient.FetchProjectWithTrackers(projectId.Id);  
                             dataCache.Trackers = project.Trackers;
-                            dataCache.Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(projectId.Id);
-                            dataCache.Statuses = redmineClient.GetNativeIssueStatusList(projectId.Id);
-                            dataCache.Versions = redmineClient.FetchVersionListRefsWithFakeItems(projectId.Id);
+                            dataCache.Categories = redmineClient.FetchIssueCategoryRefsWithFakeItems(project.Identifier);
+                            dataCache.Statuses = redmineClient.GetNativeIssueStatusList(project.Identifier);
+                            dataCache.Versions = redmineClient.FetchVersionListRefsWithFakeItems(project.Identifier);
                             if (RedmineClientForm.RedmineVersion >= ApiVersion.V14x)
                             {
-                                dataCache.ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(projectId.Id);
+                                dataCache.ProjectMembers = redmineClient.FetchUserListWithProjectFilterAndFakeItem(project.Identifier);
                                 redmineClient.RefreshIssuePrioritiesAndActivities();
                             }
                             
