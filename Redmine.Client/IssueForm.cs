@@ -1,17 +1,73 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Windows.Forms;
 using Redmine.Net.Api.Types;
 using Redmine.Client.Languages;
 using System.Text.RegularExpressions;
-using System.IO;
-using System.Globalization;
-using Redmine.Net.Api;
 
 namespace Redmine.Client
 {
+    internal class ClientIssueRelation
+    {
+        private readonly IssueRelation relation;
+        private Issue issueTo;
+        public String IssueToSubject => issueTo.Subject;
+        public IdentifiableName IssueToTracker => issueTo.Tracker;
+        public IdentifiableName IssueToStatus => issueTo.Status;
+        public IdentifiableName IssueToProject => issueTo.Project;
+
+        
+        public int Id { get; private set; }
+        public int IssueId { get; private set; }
+        public int IssueToId { get; private set; }
+        public IssueRelationType Type { get; private set; }
+
+        private ClientIssueRelation()
+        {
+            
+        }
+
+        public static ClientIssueRelation StrightRelation(IssueRelation relation, Issue issueTo)
+        {
+            return new ClientIssueRelation()
+            {
+                Id = relation.Id,
+                IssueId = relation.IssueId,
+                IssueToId = relation.IssueToId,
+                Type = relation.Type,
+                issueTo = issueTo
+            };
+        }
+        public static ClientIssueRelation InvertedRelation(IssueRelation relation, Issue issueTo)
+        {
+            return new ClientIssueRelation()
+            {
+                Id = relation.Id,
+                IssueId = relation.IssueToId,
+                IssueToId = relation.IssueId,
+                Type = InvertRelationType(relation.Type),
+                issueTo = issueTo
+            };
+        }
+
+        private static IssueRelationType InvertRelationType(IssueRelationType issueRelationType)
+        {
+            switch (issueRelationType)
+            {
+                case IssueRelationType.Precedes: return IssueRelationType.Follows;
+                case IssueRelationType.Follows: return IssueRelationType.Precedes;
+                case IssueRelationType.Duplicated: return IssueRelationType.Duplicates;
+                case IssueRelationType.Duplicates: return IssueRelationType.Duplicated;
+                case IssueRelationType.Blocks: return IssueRelationType.Blocked;
+                case IssueRelationType.Blocked: return IssueRelationType.Blocks;
+                default:
+                case IssueRelationType.Relates:
+                    return issueRelationType;
+            }
+        }
+
+        
+    };
     public partial class IssueForm : BgWorker
     {
         private class ClientCustomField
@@ -20,44 +76,7 @@ namespace Redmine.Client
             public String Value { get; set; }
         };
 
-        private class ClientIssueRelation 
-        {
-            private readonly IssueRelation relation;
-            private Issue issueTo;
-            public String IssueToSubject => issueTo.Subject;
-            public IdentifiableName IssueToTracker => issueTo.Tracker;
-            public IdentifiableName IssueToStatus => issueTo.Status;
-            public IdentifiableName IssueToProject => issueTo.Project;
-
-
-            public int Id => relation.Id;
-            public int IssueId => relation.IssueId;
-            public int IssueToId => relation.IssueToId;
-            public IssueRelationType Type => relation.Type;
-
-            public ClientIssueRelation(IssueRelation relation, Issue issueTo)
-            {
-                
-                this.relation = relation;
-                this.issueTo = issueTo;
-            }
-
-            internal static IssueRelationType InvertRelationType(IssueRelationType issueRelationType)
-            {
-                switch (issueRelationType)
-                {
-                    case IssueRelationType.Precedes: return IssueRelationType.Follows;
-                    case IssueRelationType.Follows: return IssueRelationType.Precedes;
-                    case IssueRelationType.Duplicated: return IssueRelationType.Duplicates;
-                    case IssueRelationType.Duplicates: return IssueRelationType.Duplicated;
-                    case IssueRelationType.Blocks: return IssueRelationType.Blocked;
-                    case IssueRelationType.Blocked: return IssueRelationType.Blocks;
-                    default:
-                    case IssueRelationType.Relates:
-                        return issueRelationType;
-                }
-            }
-        };
+        
 
         private readonly RedmineClient redmineClient;
         private Project project;
@@ -854,12 +873,19 @@ namespace Redmine.Client
                                     // swap id's if neccesary
                                     if (r.IssueId != issueId)
                                     {
-                                        r.IssueToId = r.IssueId;
-                                        r.IssueId = issueId;
-                                        r.Type = ClientIssueRelation.InvertRelationType(r.Type);
+                                        var relatedIssue = redmineClient.FetchIssueHeader(r.IssueId);
+                                        var clientRelation = ClientIssueRelation.InvertedRelation(r, relatedIssue);
+                                        
                                     }
-                                    var relatedIssue = redmineClient.FetchIssueHeader(r.IssueToId);
-                                    currentIssueRelations.Add(new ClientIssueRelation(r, relatedIssue));
+                                    else
+                                    {
+                                        var relatedIssue = redmineClient.FetchIssueHeader(r.IssueToId);
+                                        var clientRelation=ClientIssueRelation.StrightRelation(r, relatedIssue);
+                                        currentIssueRelations.Add(clientRelation);
+                                    }
+
+                                    
+                                    
                                 }
                             }
                         }
@@ -969,7 +995,8 @@ namespace Redmine.Client
         private void DataGridViewChildren_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             var currentIssueChild = (IssueChild)DataGridViewChildren.Rows[e.RowIndex].DataBoundItem;
-            RedmineClientForm.ShowIssue(new Issue { Id = currentIssueChild.Id, Subject = currentIssueChild.Subject });
+            var issue=redmineClient.FetchIssue(currentIssueChild.Id);
+            RedmineClientForm.Instance.ShowIssue(issue);
         }
 
         private void DataGridViewRelations_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -989,7 +1016,8 @@ namespace Redmine.Client
         private void DataGridViewRelations_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             var currentIssueRelation = (ClientIssueRelation)DataGridViewRelations.Rows[e.RowIndex].DataBoundItem;
-            RedmineClientForm.ShowIssue(new Issue { Id = currentIssueRelation.IssueToId, Subject = currentIssueRelation.IssueToSubject, Project = currentIssueRelation.IssueToProject } );
+            var issue = redmineClient.FetchIssue(currentIssueRelation.IssueToId);
+            RedmineClientForm.Instance.ShowIssue(issue);
         }
 
         private void dataGridViewAttachments_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)

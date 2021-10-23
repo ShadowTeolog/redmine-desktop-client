@@ -63,8 +63,7 @@ namespace Redmine.Client
         private IList<Issue> currentIssues;
 
         /* ugly hack to create a singleton */
-        private static readonly RedmineClientForm instance = new RedmineClientForm();
-        public static RedmineClientForm Instance { get { return instance; } }
+        public static RedmineClientForm Instance { get; } = new RedmineClientForm();
         private RedmineClient redmineClient;
 
         private RedmineClientForm()
