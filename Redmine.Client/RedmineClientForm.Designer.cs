@@ -209,7 +209,7 @@ namespace Redmine.Client
             this.ComboBoxProject.Name = "ComboBoxProject";
             this.ComboBoxProject.Size = new System.Drawing.Size(232, 21);
             this.ComboBoxProject.TabIndex = 2;
-            this.ComboBoxProject.SelectedIndexChanged += new System.EventHandler(this.ComboBoxProject_SelectedIndexChanged);
+            this.ComboBoxProject.SelectedValueChanged += new System.EventHandler(this.ComboBoxProject_SelectedValueChanged);
             // 
             // BtnCommitButton
             // 

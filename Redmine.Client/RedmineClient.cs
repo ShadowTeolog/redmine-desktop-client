@@ -150,11 +150,11 @@ namespace Redmine.Client
             return parameters;
         }
 
-        public List<Issue> FetchIssueHeadersWithFilter(int projectId, Filter filter)
+        public List<Issue> FetchIssueHeadersWithFilter(string projectIdentity, Filter filter)
         {
             var parameters = new NameValueCollection();
-            if (projectId > 0)
-                parameters.Add(RedmineKeys.PROJECT_ID, projectId.ToString());
+            if (!string.IsNullOrWhiteSpace(projectIdentity))
+                parameters.Add(RedmineKeys.PROJECT_ID, projectIdentity);
             if (filter.onlyMe)
                 parameters.Add(RedmineKeys.ASSIGNED_TO_ID, "me");
             else if (filter.AssignedToId > 0)

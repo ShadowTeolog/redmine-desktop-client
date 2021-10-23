@@ -51,6 +51,7 @@ namespace Redmine.Client
 
         public MainFormData(RedmineClient redmineClient, IList<Project> projects, int projectId, bool onlyMe, Filter filter)
         {
+            var projectindentity = projects.FirstOrDefault(p => p.Id == projectId)?.Identifier;
             this.redmineClient = redmineClient;
             ProjectId = projectId;
             Projects.Add(new FakeClientProject(FakeClientProject.FakeProjectId.AllIssues, Languages.Lang.ShowAllIssues));
@@ -142,8 +143,9 @@ namespace Redmine.Client
 
             try
             {
+                
                 filter.onlyMe = onlyMe;
-                Issues =  redmineClient.FetchIssueHeadersWithFilter(ProjectId, filter) ;
+                Issues =  redmineClient.FetchIssueHeadersWithFilter(projectindentity, filter) ;
             }
             catch (Exception e)
             {

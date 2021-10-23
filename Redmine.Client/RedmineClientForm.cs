@@ -134,7 +134,7 @@ namespace Redmine.Client
         {
             try
             {
-                projectId = ((Project)ComboBoxProject.SelectedItem).Id;
+                projectId = ((IClientProject)ComboBoxProject.SelectedItem).Id;
                 activityId = ((Enumerations.EnumerationItem)ComboBoxActivity.SelectedItem).Id;
                 issueId = ((Issue)DataGridViewIssues.SelectedRows[0].DataBoundItem).Id;
             }
@@ -423,7 +423,7 @@ namespace Redmine.Client
                     ComboBoxProject.SelectedValue = projectId;
                 else
                     ComboBoxProject.SelectedIndex = 0;
-                projectId = ((ClientProject)ComboBoxProject.SelectedItem).Id;
+                projectId = ((IClientProject)ComboBoxProject.SelectedItem).Id;
             }
             SetIssueSelectionTo(issueId);
             updating = false;
@@ -867,16 +867,7 @@ namespace Redmine.Client
             UpdateNotifyIconText();
         }
 
-        /// <summary>
-        /// A new project is selected; update the form data
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ComboBoxProject_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (!updating)
-                RefreshFormData();
-        }
+        
 
         /// <summary>
         /// Is executable running on Mono?
@@ -1679,5 +1670,10 @@ namespace Redmine.Client
             refreshIssuesTimer.Start();
         }
 
+        private void ComboBoxProject_SelectedValueChanged(object sender, EventArgs e)
+        {
+            if (!updating)
+                RefreshFormData();
+        }
     }
 }
