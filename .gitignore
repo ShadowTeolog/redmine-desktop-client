@@ -3,3 +3,4 @@ sys$command
 bin
 obj
 *.suo
+.vs
