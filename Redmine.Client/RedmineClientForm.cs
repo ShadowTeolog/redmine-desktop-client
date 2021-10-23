@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Windows.Forms;
-using Redmine.Net.Api;
 using Redmine.Net.Api.Types;
 using Redmine.Client.Languages;
 using Redmine.Client.Properties;
@@ -257,7 +256,7 @@ namespace Redmine.Client
 
             ComboBoxProject.DataSource = data.Projects;
             ComboBoxProject.ValueMember = "Id";
-            ComboBoxProject.DisplayMember = "DisplayName";
+            ComboBoxProject.DisplayMember = "Name";
 
             var currentActivityId = activityId;
             ComboBoxActivity.DataSource = Enumerations.Activities;

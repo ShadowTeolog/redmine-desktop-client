@@ -223,7 +223,7 @@ namespace Redmine.Client
             {
                 Redmine.Net.Api.RedmineManager manager;
                 if (AuthenticationCheckBox.Checked)
-                    manager = new Redmine.Net.Api.RedmineManager(RedmineBaseUrlTextBox.Text, RedmineUsernameTextBox.Text, RedminePasswordTextBox.Text, GetSelectedMimeFormat());
+                    manager = new Redmine.Net.Api.RedmineManager(RedmineBaseUrlTextBox.Text, RedmineUsernameTextBox.Text, RedminePasswordTextBox.Text, GetSelectedMimeFormat(),false);
                 else
                     manager = new Redmine.Net.Api.RedmineManager(RedmineBaseUrlTextBox.Text, GetSelectedMimeFormat());
                 User newCurrentUser = manager.GetCurrentUser();

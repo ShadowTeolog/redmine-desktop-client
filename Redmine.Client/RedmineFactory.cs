@@ -6,13 +6,13 @@ namespace Redmine.Client
     {
         public static RedmineClient Connect(string redmineUrl, string redmineUser, string redminePassword, MimeFormat defaultCommunicationType)
         {
-            var nativeconnection= new RedmineManager(redmineUrl, redmineUser, redminePassword, defaultCommunicationType);
+            var nativeconnection= new RedmineManager(redmineUrl, redmineUser, redminePassword, defaultCommunicationType,false);
             return new RedmineClient(nativeconnection);
         }
 
         public static RedmineClient Connect(string redmineUrl, MimeFormat defaultCommunicationType)
         {
-            var nativeconnection = new RedmineManager(redmineUrl, defaultCommunicationType);
+            var nativeconnection = new RedmineManager(redmineUrl, defaultCommunicationType,false);
             return new RedmineClient(nativeconnection);
         }
     }
